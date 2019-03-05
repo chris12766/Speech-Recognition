@@ -1,0 +1,21 @@
+Ideas:
+
+1. conv-lstm-ctc net
+https://www.kaggle.com/c/tensorflow-speech-recognition-challenge/discussion/56074
+
+2. conv-rnn net
+https://yerevann.github.io/2016/06/26/combining-cnn-and-rnn-for-spoken-language-identification/
+mentioned here:
+https://towardsdatascience.com/tensorflow-speech-recognition-challenge-solution-outline-9c42dbd219c9?fbclid=IwAR1HBEBoFEFnNowayfPbHfhChvdF-2vaZDvZqngO3BsPPSa6Jn8V633cuj0
+
+3. neural attention net
+https://www.kaggle.com/c/tensorflow-speech-recognition-challenge/discussion/64373
+
+4. VGG + knowledge distillation + mixup
+https://www.kaggle.com/c/tensorflow-speech-recognition-challenge/discussion/47730
+
+
+5. Deepspeech pytorch fine-tuning
+https://www.kaggle.com/c/tensorflow-speech-recognition-challenge/discussion/47827
+
+
