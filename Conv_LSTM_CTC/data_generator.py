@@ -7,6 +7,7 @@ import collections
 from tensorflow.python.framework import dtypes
 from tensorflow.python.platform import gfile
 import scipy.io.wavfile
+import concurrent.futures
 
 train_data_dir = "D:/speech_data/train/"
 val_data_dir = "D:/speech_data/val/"
@@ -74,9 +75,12 @@ class DataGenerator(object):
             known.extend(unknown)
             np.random.shuffle(known)
             
-            data_list, label_list = zip(*known)
+            wav_paths_batch, label_list = zip(*known)
+           
+            with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+                decoded_audios = np.array(list(executor.map(self.decode_wav, wav_paths_batch)))
             
-            self.data_lists.append(np.array(data_list))
+            self.data_lists.append(decoded_audios)
             self.labels_lists.append(np.array(label_list))
         
     def load_data_from_dir(self, data_dir):
@@ -133,4 +137,26 @@ class DataGenerator(object):
         
         print("saving encoded audio to %s"  %wav_file)
         scipy.io.wavfile.write(wav_file, sampling_rate, audio)
+     
+
+    # if too slow, do it with tf map
+    def decode_wav(self, wav_path):
+        INT15_SCALE = np.power(2, 15)
+        target_length = int(self.sampling_rate * self.target_duration_ms / 1000)
         
+        
+        _, decoded_audio = scipy.io.wavfile.read(wav_path)
+        decoded_audio = decoded_audio.astype(np.float32, copy=False)
+        # keep 0 not shifted. Not: (audio + 0.5) * 2 / (INT15_SCALE * 2 - 1)
+        decoded_audio /= INT15_SCALE
+        curr_audio_length = len(decoded_audio)
+
+        # fix audio length by cutting or appending equally from both ends
+        start_index = abs(target_length - curr_audio_length) // 2
+        if curr_audio_length < target_length:
+            audio_reformatted = np.zeros(target_length, dtype=np.float32)
+            audio_reformatted[start_index : start_index + curr_audio_length] = decoded_audio
+        elif curr_audio_length > target_length:
+            audio_reformatted = decoded_audio[start_index : start_index + target_length]
+
+        return audio_reformatted

@@ -2,7 +2,7 @@ import os
 import glob
 import tensorflow as tf
 from conv_lstm_ctc_net import *
-from data_generator import DataGenerator
+from data_generator import *
 from word_dictionary import WordDict
 import sys
 import scipy.io.wavfile
@@ -65,20 +65,13 @@ def train_and_eval():
         init_op = tf.global_variables_initializer()
         sess.run(init_op)
 
+    print()
     for epoch in range(1, FLAGS.num_epochs + 1):
         print("Epoch number: %d" %epoch)
         data_lists, labels_lists = data_gen._get_data_lists()
         placeholders = data_gen._get_dataset_placeholders()
         train_data_batch_plh, train_label_batch_plh = placeholders[0]
         val_data_batch_plh, val_label_batch_plh = placeholders[1]
-            
-        print(data_lists[0].shape)
-        print(data_lists[0])
-        print(labels_lists[0].shape)
-        print(labels_lists[0])
-        print(train_data_batch_plh)
-        print(train_label_batch_plh)
-        print()
             
         sess.run(train_iter_init_op, feed_dict={train_data_batch_plh: data_lists[0],
                                                 train_label_batch_plh: labels_lists[0]})
@@ -88,13 +81,13 @@ def train_and_eval():
             try:
                 # get data   
                 # (128, )         (128, 4)
-                wav_paths_batch, label_batch = sess.run(next_batch_train)
+                audio, label_batch = sess.run(next_batch_train)
                 #decoded_audio = decode_wav_batch(wav_paths_batch)
                 # (128, 18240)
-                decoded_audio = np.array(list(map(decode_wav, wav_paths_batch)))
+                #decoded_audio = np.array(list(map(decode_wav, wav_paths_batch)))
                 
                 feed_dict = train_args[1]
-                feed_dict[x] = decoded_audio
+                feed_dict[x] = audio
                 feed_dict[y] = label_batch
                 
                 summary, _, global_step, loss, acc_fgreedy = sess.run(train_args[0],feed_dict=feed_dict)
@@ -168,28 +161,6 @@ def decode_wav_batch(wav_paths_batch):
 
 '''
 
-# if too slow, do it with tf map
-def decode_wav(wav_path):
-    INT15_SCALE = np.power(2, 15)
-    target_length = int(FLAGS.sampling_rate * FLAGS.target_duration_ms / 1000)
-    
-    
-    _, decoded_audio = scipy.io.wavfile.read(wav_path)
-    decoded_audio = decoded_audio.astype(np.float32, copy=False)
-    # keep 0 not shifted. Not: (audio + 0.5) * 2 / (INT15_SCALE * 2 - 1)
-    decoded_audio /= INT15_SCALE
-    curr_audio_length = len(decoded_audio)
-
-    # fix audio length by cutting or appending equally from both ends
-    start_index = abs(target_length - curr_audio_length) // 2
-    if curr_audio_length < target_length:
-        audio_reformatted = np.zeros(target_length, dtype=np.float32)
-        audio_reformatted[start_index : start_index + curr_audio_length] = decoded_audio
-    elif curr_audio_length > target_length:
-        audio_reformatted = decoded_audio[start_index : start_index + target_length]
-
-    return audio_reformatted
-
 
 
 def evaluate(step, epoch, x, y, sess, valid_writer, word_dict, val_args, next_batch_val, val_dataset_size):
@@ -201,11 +172,11 @@ def evaluate(step, epoch, x, y, sess, valid_writer, word_dict, val_args, next_ba
     
     while True:
         try:
-            wav_paths_batch, label_batch = sess.run(next_batch_val)
-            decoded_audio = np.array(list(map(decode_wav, wav_paths_batch)))
+            audio, label_batch = sess.run(next_batch_val)
+            #decoded_audio = np.array(list(map(decode_wav, wav_paths_batch)))
             
             feed_dict = val_args[1]
-            feed_dict[x] = decoded_audio
+            feed_dict[x] = audio
             feed_dict[y] = label_batch
             
             summary, loss, acc_beam, edist, predictions, scores, global_step = sess.run(
