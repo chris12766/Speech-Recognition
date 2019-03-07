@@ -1,57 +1,46 @@
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.ops import io_ops
 import os
-from tensorflow.contrib.framework.python.ops import audio_ops as contrib_audio
-
-flags = tf.app.flags
-FLAGS = flags.FLAGS
 
 
-# ADD HELP ARGUMENTS!!!!
+# directories
+saves_dir = "D:\\speech_project_saves"
+if not os.path.isdir(saves_dir):
+    os.mkdir(saves_dir)
+log_dir = os.path.join(saves_dir, "logs")
+if not os.path.isdir(log_dir):
+    os.mkdir(log_dir)
+ckpt_dir = os.path.join(saves_dir, "ckpts")
+if not os.path.isdir(ckpt_dir):
+    os.mkdir(ckpt_dir)
 
-# Additional parameters
-flags.DEFINE_string("saves_dir", "D:\\speech_project_saves", "")
-if not os.path.isdir(FLAGS.saves_dir):
-    os.mkdir(FLAGS.saves_dir)
-flags.DEFINE_string("result_dir", os.path.join(FLAGS.saves_dir, "run"), "")
-if not os.path.isdir(FLAGS.result_dir):
-    os.mkdir(FLAGS.result_dir)
-flags.DEFINE_string("log_dir", os.path.join(FLAGS.result_dir, "logs"), "")
-if not os.path.isdir(FLAGS.log_dir):
-    os.mkdir(FLAGS.log_dir)
-flags.DEFINE_string("ckpt_dir", os.path.join(FLAGS.result_dir, "ckpts"), "")
-if not os.path.isdir(FLAGS.ckpt_dir):
-    os.mkdir(FLAGS.ckpt_dir)
-flags.DEFINE_float("bg_nsr", 0.5, "")
-flags.DEFINE_float("bg_noise_prob", 0.75, "")
-flags.DEFINE_float("unknown_pct", 1/6, "")
-flags.DEFINE_integer("batch_size", 128, "")
-flags.DEFINE_integer("num_epochs", 1, "")
-flags.DEFINE_float("init_valida_epoch", 1, "")
-flags.DEFINE_integer("num_submissions", 5, "")
-# num_batches/dec_rate_lr = 2.3
-flags.DEFINE_integer("lr_dec_step", 3800, "")
-flags.DEFINE_integer("num_batches", 9000, "")
-flags.DEFINE_string("silence_class", "9", "")
-flags.DEFINE_integer("silence_len", "16000", "")
 
-# Train parameters
-flags.DEFINE_integer("sampling_rate", 16000, "")
-flags.DEFINE_float("frame_size_ms", 30.0, "")
-flags.DEFINE_float("frame_stride_ms", 10.0, "")
-# fg_interp_factor = target_duration_ms/(target_duration_ms-pad_ms, "")
-flags.DEFINE_float("pad_ms", 140, "")
-flags.DEFINE_integer("target_duration_ms", 1140, "")
-flags.DEFINE_integer("num_mel_bins", 46, "")
-flags.DEFINE_string("file_words", "map_words.txt", "")
-flags.DEFINE_string("file_chars", "map_chars.txt", "")
-# the top num_key_words in map_words.txt are key words
-flags.DEFINE_integer("num_keywords", 10, "")
-flags.DEFINE_float("init_lr", 0.0002, "")
-flags.DEFINE_float("dec_rate_lr", 0.3, "")
-flags.DEFINE_float("keep_prob", 0.5, "")
-flags.DEFINE_float("l2_scale", 0, "")
+# Training params
+batch_size = 128
+num_epochs = 1
+init_lr = 0.0002
+dec_rate_lr = 0.3
+keep_prob_const = 0.5
+# num_batches/lr_dec_step = 2.3
+lr_dec_step = 3800
+
+
+# Data params
+bg_nsr = 0.5
+bg_noise_prob = 0.75
+sampling_rate = 16000
+frame_size_ms = 30.0
+frame_stride_ms = 10.0
+# fg_interp_factor = audio_dur_in_ms/(audio_dur_in_ms-pad_ms
+pad_ms = 140
+audio_dur_in_ms = 1140
+
+
+# Model params
+num_mel_bins = 46
+l2_scale = 0
+
+
 
 def layer_convbr(net, conv1_kernel, bn_train, pad='SAME', relu=True):
     """Network layer containing conv, batch_norm and relu.
@@ -300,9 +289,9 @@ def nn_optimizer(loss, l2_scale, init_lr, dec_rate_lr, lr_dec_step, dbg=False):
     return train_step, global_step
 
 def create_train_graph(num_classes, max_label_length):
-    audio_length = int(FLAGS.sampling_rate * FLAGS.target_duration_ms / 1000)
-    frame_size = int(FLAGS.sampling_rate * FLAGS.frame_size_ms / 1000)
-    frame_stride = int(FLAGS.sampling_rate * FLAGS.frame_stride_ms / 1000)
+    audio_length = int(sampling_rate * audio_dur_in_ms / 1000)
+    frame_size = int(sampling_rate * frame_size_ms / 1000)
+    frame_stride = int(sampling_rate * frame_stride_ms / 1000)
     
     
 
@@ -312,7 +301,7 @@ def create_train_graph(num_classes, max_label_length):
     
     # convert audio to spectrogram
     nn_input = audio_to_spectrogram(
-            audio, FLAGS.sampling_rate, frame_size, frame_stride, FLAGS.num_mel_bins)
+            audio, sampling_rate, frame_size, frame_stride, num_mel_bins)
 
     # network base
     logits, _, _ = nn_conv_lstm(nn_input, num_classes, keep_prob, bn_train)
@@ -326,18 +315,18 @@ def create_train_graph(num_classes, max_label_length):
 
     # optimizer
     train_step, global_step = nn_optimizer(
-            loss, FLAGS.l2_scale, FLAGS.init_lr, FLAGS.dec_rate_lr, FLAGS.dec_rate_lr)
+            loss, l2_scale, init_lr, dec_rate_lr, dec_rate_lr)
 
     summaries = tf.summary.merge_all()
     train_writer = tf.summary.FileWriter(
-                os.path.join(FLAGS.log_dir, "train"))
+                os.path.join(log_dir, "train"))
     validation_writer = tf.summary.FileWriter(
-                os.path.join(FLAGS.log_dir, "validation"), tf.get_default_graph())
+                os.path.join(log_dir, "validation"), tf.get_default_graph())
 
 
     # arguments to sess.run()
     train_list_to_run = [summaries, train_step, global_step, loss, acc_fgreedy]
-    train_feed_dict = {keep_prob: FLAGS.keep_prob,
+    train_feed_dict = {keep_prob: keep_prob_const,
                        bn_train: True}
     val_list_to_run = [summaries, loss, acc_beam, edist, predicts, scores, global_step]
     val_feed_dict = {keep_prob: 1,
@@ -384,17 +373,17 @@ def audio_to_spectrogram(audio, sampling_rate, frame_size=480.0,
 
 '''
 def create_inference_graph(FLAGS, num_classes, max_label_length):
-        audio_length = int(FLAGS.sampling_rate * FLAGS.target_duration_ms / 1000)
-        frame_size = int(FLAGS.sampling_rate * FLAGS.frame_size_ms / 1000)
-        frame_stride = int(FLAGS.sampling_rate * FLAGS.frame_stride_ms / 1000)
-        FLAGS.num_mel_bins = FLAGS.FLAGS.num_mel_bins
+        audio_length = int(sampling_rate * audio_dur_in_ms / 1000)
+        frame_size = int(sampling_rate * frame_size_ms / 1000)
+        frame_stride = int(sampling_rate * frame_stride_ms / 1000)
+        num_mel_bins = num_mel_bins
         tf.logging.info('audios_inference parameters: %s',
-                                        [audio_length, frame_size, frame_stride, FLAGS.num_mel_bins])
+                                        [audio_length, frame_size, frame_stride, num_mel_bins])
 
         audio = tf.placeholder(tf.float32, [None, audio_length],
                                                                  name='audio')
         nn_input = audio_to_spectrogram(
-                audio, FLAGS.sampling_rate, frame_size, frame_stride, FLAGS.num_mel_bins)
+                audio, sampling_rate, frame_size, frame_stride, num_mel_bins)
 
         bn_train = tf.placeholder(tf.bool, name='bn_train')
         logits, dbg_layers, dbg_embeddings = nn_conv_lstm(

@@ -2,30 +2,15 @@ import os
 import glob
 import tensorflow as tf
 from conv_lstm_ctc_net import *
-from data_generator import *
-from word_dictionary import WordDict
+from data_generator import DataGenerator
 import sys
 import scipy.io.wavfile
 import multiprocessing
 
-# audio process pool, multi-processes to speed up audio augmentation.
-# non-deterministic.
-#_audio_process_pool = None
-# enable multiprocessing debugging
-# multiprocessing.log_to_stderr().setLevel(multiprocessing.SUBDEBUG)
 
-#_bg_audios = []
-
-def train_and_eval():
-    # Set up word_dictionary and character_dictionary.
-    word_dict = WordDict(FLAGS.file_words, FLAGS.file_chars, FLAGS.num_keywords, FLAGS.silence_class)
-    num_words, num_char_classes = word_dict.num_classes
-    max_label_length = word_dict.max_label_length
-    
-    
+def train_and_eval():    
     # Data input pipeline
-    data_gen = DataGenerator(word_dict, FLAGS.batch_size, FLAGS.unknown_pct,
-                             FLAGS.silence_class, FLAGS.silence_len, FLAGS.sampling_rate, FLAGS.target_duration_ms)
+    data_gen = DataGenerator(batch_size, sampling_rate, audio_dur_in_ms)
     datasets = data_gen._get_datasets()
     
     train_dataset = datasets[0]
@@ -47,16 +32,16 @@ def train_and_eval():
     
 
     # Create train graph
-    train_args, val_args, x, y = create_train_graph(num_char_classes, max_label_length)
+    train_args, val_args, x, y = create_train_graph(data_gen._num_char_classes, data_gen._max_encoding_length)
 
     # create savers
     saver = tf.train.Saver(tf.global_variables(), max_to_keep=100000)
-    train_writer = tf.summary.FileWriter(os.path.join(FLAGS.log_dir, "train"), sess.graph)
-    valid_writer = tf.summary.FileWriter(os.path.join(FLAGS.log_dir, "validation"), sess.graph)
+    train_writer = tf.summary.FileWriter(os.path.join(log_dir, "train"), sess.graph)
+    valid_writer = tf.summary.FileWriter(os.path.join(log_dir, "validation"), sess.graph)
 
     # Load previous model version
     step = 1
-    model_checkpoint = tf.train.latest_checkpoint(FLAGS.ckpt_dir)
+    model_checkpoint = tf.train.latest_checkpoint(ckpt_dir)
     if model_checkpoint:
         print("Restoring from", model_checkpoint)
         saver.restore(sess=sess, save_path=model_checkpoint)
@@ -66,7 +51,7 @@ def train_and_eval():
         sess.run(init_op)
 
     print()
-    for epoch in range(1, FLAGS.num_epochs + 1):
+    for epoch in range(1, num_epochs + 1):
         print("Epoch number: %d" %epoch)
         data_lists, labels_lists = data_gen._get_data_lists()
         placeholders = data_gen._get_dataset_placeholders()
@@ -79,12 +64,8 @@ def train_and_eval():
                                               val_label_batch_plh: labels_lists[1]})
         while True:
             try:
-                # get data   
                 # (128, )         (128, 4)
                 audio, label_batch = sess.run(next_batch_train)
-                #decoded_audio = decode_wav_batch(wav_paths_batch)
-                # (128, 18240)
-                #decoded_audio = np.array(list(map(decode_wav, wav_paths_batch)))
                 
                 feed_dict = train_args[1]
                 feed_dict[x] = audio
@@ -97,13 +78,13 @@ def train_and_eval():
                 print("Training stats: acc_fgreedy = %.2f, loss = %.4f" %(acc_fgreedy * 100, loss))
                 
                 
-                
-                if step > 5 and step <= 10:
-                    word_dict.word_distro(label_batch)
 
+                sys.exit()
+                
+                
                 
                 #  Run validation and save ckpt.
-                evaluate(step, epoch, x, y, sess, valid_writer, word_dict, val_args, next_batch_val, len(labels_lists[1]))
+                evaluate(step, epoch, x, y, sess, valid_writer, val_args, next_batch_val, len(labels_lists[1]), data_gen)
                 step += 1
                 
                 sys.exit()
@@ -117,53 +98,8 @@ def train_and_eval():
   
     sess.close()
 
-'''
-def init_audio_process(bg_audios=None):
-    
-    #Initialization function for creating audio processes.
-    #- Disables SIGINT in child processes and leave the main process to turn off
-    #the daemon child processes.
-    #- Updates _bg_audios, so that AudioAugmentor in child processes can use
-    #bg audio directly without getting it from the parent process repeatedly.
-    #- Resets random seed, so that different child processes have different
-    #random seeds, not the same one as the parent process.
-    
-    def sig_handler(*unused):
-        # doing_nothing sig_handler
-        return None
-    signal.signal(signal.SIGINT, sig_handler)
 
-    if bg_audios:
-        global _bg_audios
-        _bg_audios = bg_audios
-
-        identity = multiprocessing.current_process()._identity
-        np.random.seed(sum(identity) ** 2)
-
-    print('audio_pid=%s, bg_audios=%d' % (os.getpid(), len(_bg_audios)))
-
-def get_audio_pool(initargs):
-    # Returns the audio process pool. Creates the pool if it does not exist.
-    
-    global _audio_process_pool
-    if _audio_process_pool is None:
-        _audio_process_pool = multiprocessing.Pool(initializer=init_audio_process,initargs=initargs)
-    return _audio_process_pool
-
-def decode_wav_batch(wav_paths_batch):
-    initargs = [] # clean audio or use [bg_audios] for noisy
-    
-    audio_process_pool = get_audio_pool(initargs)
-    audios_list = audio_process_pool.map(decode_wav, wav_paths_batch)
-    audios = np.vstack(audios_list)
-    
-    return audios
-
-'''
-
-
-
-def evaluate(step, epoch, x, y, sess, valid_writer, word_dict, val_args, next_batch_val, val_dataset_size):
+def evaluate(step, epoch, x, y, sess, valid_writer, val_args, next_batch_val, val_dataset_size, data_gen):
     avg_acc_beam = 0
     avg_loss = 0
     sum_score = 0
@@ -185,15 +121,15 @@ def evaluate(step, epoch, x, y, sess, valid_writer, word_dict, val_args, next_ba
             valid_writer.add_summary(summary, global_step)
 
             
-            scale = FLAGS.batch_size * 100 / val_dataset_size
+            scale = batch_size * 100 / val_dataset_size
             avg_acc_beam += acc_beam * scale
             avg_loss += loss * scale
             sum_score += scores.sum()
             sum_edist += edist.sum() / val_dataset_size
 
-            for i in range(FLAGS.batch_size):
-                true_submit = word_dict.indices_to_submit(label_batch[i])
-                pred_submit = word_dict.indices_to_submit(predictions[i])
+            for i in range(batch_size):
+                true_submit = data_gen.get_label_from_encoding(label_batch[i])
+                pred_submit = data_gen.get_label_from_encoding(predictions[i])
                 wrong_submits += int(pred_submit != true_submit)
                 
                 
