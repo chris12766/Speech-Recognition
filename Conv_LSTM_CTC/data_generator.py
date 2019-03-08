@@ -115,6 +115,7 @@ class DataGenerator(object):
             labels_placeholder = tf.placeholder(labels.dtype, labels.shape, name=("labels_placeholder_%d" % i))
             self._placeholders.append((data_placeholder, labels_placeholder))
             dataset = Dataset.from_tensor_slices((data_placeholder, labels_placeholder))
+            # use the whole dataset, model does not rely on equal sized batches
             dataset = dataset.batch(batch_size, drop_remainder=False)
             self._datasets.append(dataset)
         
