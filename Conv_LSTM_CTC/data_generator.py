@@ -25,7 +25,7 @@ class DataGenerator(object):
         self._silence_alias = "9"
         self._unknown_label = "unknown"
         self._silence_length = 16000
-        self._max_encoding_length = 4  
+        self._label_encoding_length = 4  
         
         # the first _num_known_words are known
         self._num_known_words = 10
@@ -233,7 +233,7 @@ class DataGenerator(object):
         try:
             encoding = [self._char_to_id[char] for char in self._word_to_alias[word]]
             # add zeros to make all encoding equal length - allows to be packed in tensor
-            encoding.extend([0 for i in range(self._max_encoding_length - len(encoding))])
+            encoding.extend([0 for i in range(self._label_encoding_length - len(encoding))])
             return encoding
         except KeyError:
             return None

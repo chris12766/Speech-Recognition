@@ -19,10 +19,10 @@ if not os.path.isdir(ckpt_dir):
 batch_size = 128
 num_epochs = 1
 init_lr = 0.0002
-dec_rate_lr = 0.3
-dropout_keep_prob_const = 0.5
-# num_batches/lr_dec_step = 2.3
-lr_dec_step = 3800
+lr_decay_steps = 0.3
+dropout_keep_prob_train = 0.5
+# num_batches/lr_decay_rate = 2.3
+lr_decay_rate = 3800
 
 
 # Data params
@@ -38,7 +38,6 @@ audio_dur_in_ms = 1140
 
 # Model params
 num_mel_spec_bins = 46
-l2_scale = 0
 
 
 
@@ -181,7 +180,7 @@ def conv_lstm_net(input, num_char_classes, dropout_keep_prob, batch_norm_train_m
         # reverse data sequences back to normal
         lstm_output = reverse_data_seqs(backward_lstm_output)
         # normalize
-        # (batch_size=?/128, 12, 768)
+        # (batch_size=?/128, data_seq_len=12, features=768)
         lstm_net_output = tf.layers.batch_normalization(lstm_output, training=batch_norm_train_mode)
 
 
@@ -190,14 +189,12 @@ def conv_lstm_net(input, num_char_classes, dropout_keep_prob, batch_norm_train_m
         leaky_relu = lambda x: tf.nn.leaky_relu(x, alpha=0.75)
         batch_norm = lambda x: tf.layers.batch_normalization(x, training=batch_norm_train_mode)
         
-        # reshape to 2d: (batch_size=128/?, features=rest/9216)
-        fc_net = tf.reshape(lstm_net_output, [-1, lstm_net_output.shape[1] * lstm_net_output.shape[2]])
 
         # FC Block 1
         if dropout_keep_prob != 1:
-            fc_net = tf.nn.dropout(fc_net, keep_prob=dropout_keep_prob)
+            fc_net = tf.nn.dropout(lstm_net_output, keep_prob=dropout_keep_prob)
         
-        # use batch_norm instead of biases
+        # use batch_norm instead of biases                                                                  # USE XAVIER INIT FOR ALL KERNELS!!!!!
         # also use leaky_relu
         fc_net = tf.contrib.layers.fully_connected(fc_net,
                             num_outputs=160,
@@ -206,139 +203,145 @@ def conv_lstm_net(input, num_char_classes, dropout_keep_prob, batch_norm_train_m
                             normalizer_params=None,
                             weights_initializer=tf.contrib.layers.xavier_initializer(),
                             weights_regularizer=None)
-        # (batch_size=?, 160)
+        # (batch_size=?, data_seq_len=12, features=160)
         fc_net = tf.nn.leaky_relu(fc_net, alpha=0.75)
+
 
         # FC Block 2
         if dropout_keep_prob != 1:
             fc_net = tf.nn.dropout(fc_net, keep_prob=dropout_keep_prob)
-            
+           
         # use batch_norm instead of biases
-        # (batch_size=?/128, 28)
-        fc_net = tf.contrib.layers.fully_connected(fc_net,
+        # (batch_size=?, data_seq_len=12, num_char_classes=28)
+        logits = tf.contrib.layers.fully_connected(fc_net,
                                 num_outputs=num_char_classes,
                                 activation_fn=None,
                                 normalizer_fn=batch_norm,
                                 normalizer_params=None,
                                 weights_initializer=tf.contrib.layers.xavier_initializer(),
                                 weights_regularizer=None)
-                            
-                            
-        # return to 3d (batch_size, data_seq_len, pred  ictions)
-        # (batch_size=?, data_seq_len=12, num_char_classes=28)
-        logits = tf.reshape(fc_net, [-1, data_seq_len, num_char_classes])
-    
-        print()
-        print()
-        print(logits)
-        print()
-        print()
-    
+                                
     return logits
-    
-def cal_perf(pred, sparse_labels):
-    """Helper function to calculate edit distance and accuracy.
-    """
-    edist = tf.edit_distance(tf.cast(pred[0], tf.int32), sparse_labels,
-                                                     normalize=False)
-    acc = tf.reduce_mean(tf.cast(tf.equal(edist, 0), tf.float32))
-    return edist, acc
 
 
-def nn_cost_ctc(logits, labels, label_lengths):
-    """Calculates network CTC cost, accuracy, predictions and confidence scores.
-    """
-    with tf.name_scope('loss_ctc'):
-        idx = tf.where(tf.not_equal(labels, 0))
-        sparse_labels = tf.SparseTensor(idx, tf.gather_nd(labels, idx),
-                                        tf.shape(labels, out_type=tf.int64))
-        loss = tf.reduce_mean(tf.nn.ctc_loss(
-                              sparse_labels, logits, label_lengths,
-                              preprocess_collapse_repeated=True, time_major=False))
-        logits_transposed = tf.transpose(logits, perm=[1, 0, 2])
-        probs = tf.nn.softmax(logits)
-        max_probs = tf.reduce_max(probs, axis=2)
-        raw_preds = tf.argmax(probs, axis=2)
+def get_ctc_loss(logits, label_batch):
+    # logits: [batch_size, max_time, num_classes]
+    # 1-D tensor showing the length for each label in the batch
+    batch_labels_lengths = tf.fill([tf.shape(label_batch)[0]], tf.shape(label_batch)[1])
 
-    with tf.name_scope('acc_greedy'):
-        pred_greedy, _ = tf.nn.ctc_greedy_decoder(logits_transposed, label_lengths)
-        edist_greey, acc_greedy = cal_perf(pred_greedy, sparse_labels)
-        edist_greey = tf.reduce_mean(edist_greey)
+    with tf.name_scope('loss'):
+        # get sparse represenattion of the labels
+        non_zero_elems_coords = tf.where(tf.not_equal(label_batch, 0))
+        non_zero_elems = tf.gather_nd(label_batch, non_zero_elems_coords)
+        sparse_label_batch = tf.SparseTensor(indices=non_zero_elems_coords, 
+                                             values=non_zero_elems,
+                                             dense_shape=tf.shape(label_batch, out_type=tf.int64))
+                                        
+        # calculate ctc loss                                
+        ctc_loss_op = tf.nn.ctc_loss(labels=sparse_label_batch, 
+                                     inputs=logits, 
+                                     sequence_length=batch_labels_lengths,
+                                     preprocess_collapse_repeated=True, 
+                                     time_major=False, 
+                                     ctc_merge_repeated=True,
+                                     ignore_longer_outputs_than_inputs=False)
+        loss = tf.reduce_mean(ctc_loss_op)
+        
+        
+        prediction_probabilities = tf.nn.softmax(logits)
+        max_probabilities = tf.reduce_max(prediction_probabilities, axis=2)
+        raw_predictions = tf.argmax(prediction_probabilities, axis=2)
 
-    with tf.name_scope('acc_beam'):
-        pred_beam, prob_scores = tf.nn.ctc_beam_search_decoder(
-                logits_transposed, label_lengths, top_paths=2)
-        edist, acc_beam = cal_perf(pred_beam, sparse_labels)
+
+
+        # greedy decode logits
+        # greedy decoder - beeam decoder with beam_width=1 and top_paths=1
+        logits_T = tf.transpose(logits, perm=[1, 0, 2])
+        greedy_predictions, neg_sum_logits = tf.nn.ctc_greedy_decoder(inputs=logits_T, 
+                                                sequence_length=batch_labels_lengths,
+                                                merge_repeated=True)
         
-        preds = tf.cast(tf.sparse.to_dense(pred_beam[0]), tf.int32)
-        scores = prob_scores[:, 0] - prob_scores[:, 1]
+        # get greedy performance metrics
+        edit_dist_greedy = tf.edit_distance(tf.cast(greedy_predictions[0], tf.int32),
+                                            sparse_label_batch, 
+                                            normalize=False)
+        acc_greedy = tf.reduce_mean(tf.cast(tf.equal(edit_dist_greedy, 0), tf.float32))
+        edit_dist_greedy = tf.reduce_mean(edit_dist_greedy)
+
+
+        
+        # beam decode logits
+        beam_predictions, log_probabilities = tf.nn.ctc_beam_search_decoder(inputs=logits_T, 
+                                                    sequence_length=batch_labels_lengths, 
+                                                    beam_width=100,
+                                                    top_paths=2,
+                                                    merge_repeated=True)
+                                        
+        # get beam performance metrics
+        edit_dist_beam = tf.edit_distance(tf.cast(beam_predictions[0], tf.int32),
+                                              sparse_label_batch,
+                                              normalize=False)
+        acc_beam = tf.reduce_mean(tf.cast(tf.equal(edit_dist_beam, 0), tf.float32))
         
         
-        #sys.exit()
-        
-        
+        predictions = tf.cast(tf.sparse.to_dense(beam_predictions[0]), tf.int32)
+        scores = log_probabilities[:, 0] - log_probabilities[:, 1]
+
     tf.summary.scalar('ctc_loss', loss)
     tf.summary.scalar('acc_greedy', acc_greedy)
-    tf.summary.scalar('edist_greey', edist_greey)
-    # tf.summary.scalar('confidence_score', tf.reduce_mean(scores))
+    tf.summary.scalar('edit_dist_greedy', edit_dist_greedy)
+    tf.summary.scalar('confidence_score', tf.reduce_mean(scores))
 
-    return loss, acc_greedy, acc_beam, edist, preds, scores, raw_preds, max_probs
+    return predictions, loss, acc_greedy, edit_dist_greedy, acc_beam, edit_dist_beam, scores
 
 
-def nn_optimizer(loss, l2_scale, init_lr, dec_rate_lr, lr_dec_step, dbg=False):
-    """Network cost optimizer, l2_regularizer, gradient clipping
-        and batch_norm update.
-    """
+def optimize_loss(loss, init_lr, lr_decay_steps, lr_decay_rate):
     global_step = tf.train.get_or_create_global_step()
-    train_variables = tf.trainable_variables()
-
-    sum_l2_loss = 0
-    num_params = 0
-    with tf.name_scope('regularizer'):
-        for var in train_variables:
-            if 'kernel' in var.op.name:
-                num_params += np.prod(var.shape.as_list())
-                v_loss = tf.nn.l2_loss(var)
-                if dbg:
-                    tf.summary.scalar(var.op.name + '/w_l2', v_loss)
-                sum_l2_loss += v_loss
-        loss += sum_l2_loss * l2_scale
-        tf.logging.debug('num_weights_params=%d', num_params)
+    train_vars = tf.trainable_variables()
 
     with tf.name_scope('optimizer'):
         max_grad_norm = 10.0
-        learning_rate = tf.train.exponential_decay(init_lr, global_step, dec_rate_lr, lr_dec_step, staircase=True)
-        optimizer = tf.train.AdamOptimizer(learning_rate, epsilon=1e-8)
-        grads = tf.gradients(loss, train_variables)
-        mod_grads, ctc_global_norm = tf.clip_by_global_norm(grads, max_grad_norm)
+        # adaptive learning rate
+        learn_rate = tf.train.exponential_decay(learning_rate=init_lr, 
+                                                global_step=global_step, 
+                                                decay_steps=lr_decay_steps, 
+                                                decay_rate=lr_decay_rate, 
+                                                staircase=True,
+                                                name='adapt_learn_rate')
+        optimizer = tf.train.AdamOptimizer(learning_rate=learn_rate,
+                                           beta1=0.9,
+                                           beta2=0.999,
+                                           epsilon=1e-8,
+                                           use_locking=False,
+                                           name='Adam')
+        # compute gradients
+        gradients = tf.gradients(loss, train_vars)
+        # gradient clipping
+        clipped_gradients, global_norm = tf.clip_by_global_norm(t_list=gradients, 
+                                                                clip_norm=max_grad_norm,
+                                                                use_norm=None)
+        grad_vars = zip(clipped_gradients, train_vars)
 
-        if dbg:
-            for var in tf.global_variables():
-                if 'batch_normalization' in var.op.name:
-                    tf.summary.histogram(var.op.name, var)
+        # make sure update ops such as batch normalization occur before the training
+        with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
+            # perform training and increment global_step
+            train_op = optimizer.apply_gradients(grad_vars, global_step=global_step)
+            
+            
+    tf.summary.scalar('learn_rate', learn_rate)
+    tf.summary.scalar('global_norm', global_norm)
+    
+    return train_op, global_step
 
-        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        tf.logging.debug('optimizer dependencies: %d', len(update_ops))
-        with tf.control_dependencies(update_ops):
-            train_step = optimizer.apply_gradients(zip(mod_grads, train_variables),
-                                                                                         global_step=global_step)
-
-    tf.summary.scalar('learning_rate', learning_rate)
-    tf.summary.scalar('l2loss', sum_l2_loss)
-    tf.summary.scalar('global_norm', ctc_global_norm)
-
-    tf.logging.debug('l2_scale=%f, max_grad_norm=%f', l2_scale, max_grad_norm)
-    return train_step, global_step
-
-def create_train_graph(num_char_classes, max_encoding_length):
+def create_train_graph(num_char_classes, label_encoding_length):
     audio_length = int(sampling_rate * audio_dur_in_ms / 1000)
     frame_size = int(sampling_rate * frame_size_ms / 1000)
     frame_stride = int(sampling_rate * frame_stride_ms / 1000)
 
     # batch placeholders
     # batch size is None as it is not necessarily the same all the time
-    data_batch = tf.placeholder(tf.float32, [None, audio_length], name="audio")
-    label_batch = tf.placeholder(tf.int32, [None, max_encoding_length], name="label")
+    data_batch_plh = tf.placeholder(tf.float32, [None, audio_length], name="audio")
+    label_batch_plh = tf.placeholder(tf.int32, [None, label_encoding_length], name="label")
     
     # training placeholders
     dropout_keep_prob = tf.placeholder_with_default(1.0, shape=(), name="dropout_keep_prob")
@@ -346,48 +349,33 @@ def create_train_graph(num_char_classes, max_encoding_length):
     
     # convert audio to spectrograms
     # (batch_size, num_frames, num_mel_spec_bins)
-    spectrograms = get_spectrograms(data_batch, sampling_rate, frame_size, frame_stride, num_mel_spec_bins)
+    spectrograms = get_spectrograms(data_batch_plh, sampling_rate, frame_size, frame_stride, num_mel_spec_bins)
 
-    # perform inference
+    # inference
     logits = conv_lstm_net(spectrograms, num_char_classes, dropout_keep_prob, batch_norm_train_mode)
     
-
-    print("WOOOO")
-
-
-    sys.exit()
-    
-    # ctc_cost function
-    label_lengths = tf.fill([tf.shape(spectrograms)[0]], max_encoding_length)
-    loss, acc_fgreedy, acc_beam, edist, \
-            predicts, scores, raw_preds, \
-            max_probs = nn_cost_ctc(logits, label_batch, label_lengths)
+    # loss and performance metrics
+    predictions, loss, acc_greedy, edit_dist_greedy, acc_beam, edit_dist_beam, scores = get_ctc_loss(logits, label_batch_plh)
 
     # optimizer
-    train_step, global_step = nn_optimizer(
-            loss, l2_scale, init_lr, dec_rate_lr, dec_rate_lr)
+    train_op, global_step = optimize_loss(loss, init_lr, lr_decay_steps, lr_decay_steps)
 
+    
     summaries = tf.summary.merge_all()
-    train_writer = tf.summary.FileWriter(
-                os.path.join(log_dir, "train"))
-    validation_writer = tf.summary.FileWriter(
-                os.path.join(log_dir, "validation"), tf.get_default_graph())
-
 
     # arguments to sess.run()
-    train_list_to_run = [summaries, train_step, global_step, loss, acc_fgreedy]
-    train_feed_dict = {dropout_keep_prob: dropout_keep_prob_const,
+    ops_to_run = [summaries, global_step, loss, acc_greedy, edit_dist_greedy, acc_beam, edit_dist_beam, scores]
+    
+    train_feed_dict = {dropout_keep_prob: dropout_keep_prob_train,
                        batch_norm_train_mode: True}
-    val_list_to_run = [summaries, loss, acc_beam, edist, predicts, scores, global_step]
     val_feed_dict = {batch_norm_train_mode: False}
     
-    return (train_list_to_run, train_feed_dict), (val_list_to_run, val_feed_dict), data_batch, label_batch
+    return (ops_to_run + [train_op], train_feed_dict), (ops_to_run + [predictions], val_feed_dict), data_batch_plh, label_batch_plh
 
 
 
-def get_spectrograms(data_batch, sampling_rate, frame_size=480.0,
-                         frame_stride=160.0, num_mel_spec_bins=40.0):
-    # input data_batch  -> (batch_size, sample_length)
+def get_spectrograms(data_batch, sampling_rate, frame_size=480.0, frame_stride=160.0, num_mel_spec_bins=40.0):
+    # input data_batch (batch_size, sample_length)
     with tf.name_scope('audio_to_spec_conversion'):
         # get magnitude spectrogram via the short-term Fourier transform
         # (batch_size, num_frames, num_spectrogram_bins)
@@ -428,7 +416,7 @@ def get_spectrograms(data_batch, sampling_rate, frame_size=480.0,
     return scale_log
 
 '''
-def create_inference_graph(FLAGS, num_char_classes, max_encoding_length):
+def create_inference_graph(FLAGS, num_char_classes, label_encoding_length):
         audio_length = int(sampling_rate * audio_dur_in_ms / 1000)
         frame_size = int(sampling_rate * frame_size_ms / 1000)
         frame_stride = int(sampling_rate * frame_stride_ms / 1000)
@@ -447,10 +435,10 @@ def create_inference_graph(FLAGS, num_char_classes, max_encoding_length):
         prob = tf.nn.softmax(logits)
         chars = tf.argmax(prob, axis=2)
 
-        label_lengths = tf.fill([tf.shape(spectrogram)[0]], max_encoding_length)
-        logits_transposed = tf.transpose(logits, perm=[1, 0, 2])
+        label_lengths = tf.fill([tf.shape(spectrogram)[0]], label_encoding_length)
+        logits_T = tf.transpose(logits, perm=[1, 0, 2])
         pred, score_cmp = tf.nn.ctc_beam_search_decoder(
-                logits_transposed, label_lengths, top_paths=2)
+                logits_T, label_lengths, top_paths=2)
         pred_cmp = [tf.cast(tf.sparse.to_dense(p), tf.int32)
                                             for p in pred]
         predicts = pred_cmp[0]

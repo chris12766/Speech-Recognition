@@ -32,7 +32,7 @@ def train_and_eval():
     
 
     # Create train graph
-    train_args, val_args, x, y = create_train_graph(data_gen._num_char_classes, data_gen._max_encoding_length)
+    train_args, val_args, x, y = create_train_graph(data_gen._num_char_classes, data_gen._label_encoding_length)
 
     # create savers
     saver = tf.train.Saver(tf.global_variables(), max_to_keep=100000)
@@ -40,12 +40,12 @@ def train_and_eval():
     valid_writer = tf.summary.FileWriter(os.path.join(log_dir, "validation"), sess.graph)
 
     # Load previous model version
-    step = 1
+    curr_step = 1
     model_checkpoint = tf.train.latest_checkpoint(ckpt_dir)
     if model_checkpoint:
         print("Restoring from", model_checkpoint)
         saver.restore(sess=sess, save_path=model_checkpoint)
-        step += int(model_checkpoint.split("-")[-1])
+        curr_step += int(model_checkpoint.split("-")[-1])
     else:
         init_op = tf.global_variables_initializer()
         sess.run(init_op)
@@ -64,42 +64,50 @@ def train_and_eval():
                                               val_label_batch_plh: labels_lists[1]})
         while True:
             try:
-                # (128, )         (128, 4)
-                audio, label_batch = sess.run(next_batch_train)
+                # (128, )    (128, 4)
+                data_batch, label_batch = sess.run(next_batch_train)
                 
                 feed_dict = train_args[1]
-                feed_dict[x] = audio
+                feed_dict[x] = data_batch
                 feed_dict[y] = label_batch
                 
-                summary, _, global_step, loss, acc_fgreedy = sess.run(train_args[0],feed_dict=feed_dict)
-                train_writer.add_summary(summary, step) 
                 
-                print('Step #%d, epoch #%d' %(step, epoch))
-                print("Training stats: acc_fgreedy = %.2f, loss = %.4f" %(acc_fgreedy * 100, loss))
+                summary, global_step, loss, acc_greedy, edit_dist_greedy, \
+                        acc_beam, edit_dist_beam, scores, _ = sess.run(train_args[0],
+                                                                       feed_dict=feed_dict)
+                train_writer.add_summary(summary, curr_step) 
                 
-                
-
-                sys.exit()
-                
+                print('curr_step #%d, epoch #%d' %(curr_step, epoch))
+                print("Training stats: acc_greedy = %.2f, loss = %.4f" %(acc_greedy * 100, loss))
                 
                 
                 #  Run validation and save ckpt.
-                evaluate(step, epoch, x, y, sess, valid_writer, val_args, next_batch_val, len(labels_lists[1]), data_gen)
-                step += 1
+                evaluate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_val, len(labels_lists[1]), data_gen)
+                curr_step += 1
                 
-                sys.exit()
+                
+                
+                
+                
+                
+                break
+                
+                
+                
+                
+                
             except tf.errors.OutOfRangeError:
                 print("Epoch ended")
                 break
         
         # save after each epoch
-        print("Saving in", ckpt_path)
-        saver.save(sess, ckpt_path, global_step=step)
+        print("Saving in", ckpt_dir)
+        saver.save(sess, ckpt_dir, global_step=curr_step)
   
     sess.close()
 
 
-def evaluate(step, epoch, x, y, sess, valid_writer, val_args, next_batch_val, val_dataset_size, data_gen):
+def evaluate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_val, val_dataset_size, data_gen):
     avg_acc_beam = 0
     avg_loss = 0
     sum_score = 0
@@ -108,16 +116,15 @@ def evaluate(step, epoch, x, y, sess, valid_writer, val_args, next_batch_val, va
     
     while True:
         try:
-            audio, label_batch = sess.run(next_batch_val)
-            #decoded_audio = np.array(list(map(decode_wav, wav_paths_batch)))
+            data_batch, label_batch = sess.run(next_batch_val)
             
             feed_dict = val_args[1]
-            feed_dict[x] = audio
+            feed_dict[x] = data_batch
             feed_dict[y] = label_batch
             
-            summary, loss, acc_beam, edist, predictions, scores, global_step = sess.run(
-                                                                                val_args[0],
-                                                                                feed_dict=val_args[1])
+            summary, global_step, loss, acc_greedy, edit_dist_greedy, \
+                        acc_beam, edit_dist_beam, scores, predictions = sess.run(val_args[0],
+                                                                                 feed_dict=val_args[1])
             valid_writer.add_summary(summary, global_step)
 
             
@@ -125,21 +132,31 @@ def evaluate(step, epoch, x, y, sess, valid_writer, val_args, next_batch_val, va
             avg_acc_beam += acc_beam * scale
             avg_loss += loss * scale
             sum_score += scores.sum()
-            sum_edist += edist.sum() / val_dataset_size
+            sum_edist += edit_dist_beam.sum() / val_dataset_size
 
             for i in range(batch_size):
-                true_submit = data_gen.get_label_from_encoding(label_batch[i])
-                pred_submit = data_gen.get_label_from_encoding(predictions[i])
+                true_submit = data_gen._get_label_from_encoding(label_batch[i])
+                pred_submit = data_gen._get_label_from_encoding(predictions[i])
                 wrong_submits += int(pred_submit != true_submit)
                 
-                
+            
+
+
+
+
+            
             break
+            
+            
+            
+            
+            
         except tf.errors.OutOfRangeError:
             break
     
 
     acc_submit = (1 - wrong_submits / val_dataset_size) * 100
-    print('Step #%d, epoch #%d' %(step, epoch))
+    print('curr_step #%d, epoch #%d' %(curr_step, epoch))
     print("Validation stats: acc_beam = %.2f, acc_submit = %.2f" %(avg_acc_beam, acc_submit))
     print("loss = %.4f, sum_edist = %.4f, confidence = %.3f" %(avg_loss/100,sum_edist,sum_score/val_dataset_size))
 
