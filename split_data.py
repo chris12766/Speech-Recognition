@@ -1,11 +1,20 @@
 import os
 import shutil
 
-new_data_dir = "D:/speech_data/"
-original_data_dir = "D:/speech_dataset/"
-train_data_dir = "D:/speech_data/train/"
-val_data_dir = "D:/speech_data/val/"
-test_data_dir = "D:/speech_data/test/"
+
+
+# only change these 2
+downloads_dir = "C:\\Users\\chkar\\Downloads"
+extracted_folder = "speech_data"
+
+
+
+# do not change
+new_data_dir = os.path.join(downloads_dir, "speech_datasets")
+original_data_dir = os.path.join(downloads_dir, extracted_folder)
+train_data_dir = os.path.join(new_data_dir, "train")
+val_data_dir = os.path.join(new_data_dir, "val")
+test_data_dir = os.path.join(new_data_dir, "test")
 
 if not os.path.isdir(new_data_dir):
     os.mkdir(new_data_dir)
