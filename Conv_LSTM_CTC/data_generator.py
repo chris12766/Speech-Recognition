@@ -6,7 +6,7 @@ from tensorflow.python.framework import dtypes
 from tensorflow.python.platform import gfile
 import scipy.io.wavfile
 import concurrent.futures
-
+import librosa
 
 
 
@@ -208,7 +208,7 @@ class DataGenerator(object):
 
     # if too slow, do it with tf map
     def _decode_wav_file(self, wav_path):
-        _, decoded_audio = scipy.io.wavfile.read(wav_path)
+        sampling_rate, decoded_audio = scipy.io.wavfile.read(wav_path)
         decoded_audio = decoded_audio.astype(np.float32, copy=False)
         
         # bring into the 16-bit int range
@@ -245,3 +245,35 @@ class DataGenerator(object):
         except KeyError:
             return self._unknown_label
         return label
+        
+        
+    def _get_log_specgram(decoded_audio, sampling_rate, window_size=20, step_size=10, eps=1e-10):
+        nperseg = int(round(window_size * sampling_rate / 1e3))
+        noverlap = int(round(step_size * sampling_rate / 1e3))
+        
+        freqs, times, spec = signal.spectrogram(decoded_audio,
+                                                fs=sampling_rate,
+                                                window='hann',
+                                                nperseg=nperseg,
+                                                noverlap=noverlap,
+                                                detrend=False)
+        log_spec = np.log(spec.T.astype(np.float32) + eps)
+
+        # normalize
+        mean = np.mean(log_spec, axis=0)
+        std = np.std(log_spec, axis=0)
+        log_spec = (log_spec - mean) / std
+        
+        return freqs, times, log_spec
+        
+        
+    def _get_mfcc(decoded_audio, sampling_rate):
+        mel_spec = librosa.feature.melspectrogram(decoded_audio, sr=sampling_rate, n_mels=128)
+        log_mel_spec = librosa.power_to_db(mel_spec, ref=np.max)
+        
+        mfcc = librosa.feature.mfcc(S=log_mel_spec, n_mfcc=13)
+        # pad on the first and second deltas
+        delta2_mfcc = librosa.feature.delta(mfcc, order=2)
+        
+        return delta2_mfcc
+         

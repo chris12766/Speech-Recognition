@@ -358,7 +358,7 @@ def create_train_graph(num_char_classes, label_encoding_length):
     
     # convert audio to spectrograms
     # (batch_size, num_frames, num_mel_spec_bins)
-    spectrograms = get_spectrograms(data_batch_plh, sampling_rate, frame_size, frame_stride, num_mel_spec_bins)
+    spectrograms = get_log_mel_spectrograms(data_batch_plh, sampling_rate, frame_size, frame_stride, num_mel_spec_bins)
 
     # inference
     logits = conv_lstm_net(spectrograms, num_char_classes, dropout_keep_prob, batch_norm_train_mode)
@@ -383,7 +383,8 @@ def create_train_graph(num_char_classes, label_encoding_length):
 
 
 
-def get_spectrograms(data_batch, sampling_rate, frame_size=480.0, frame_stride=160.0, num_mel_spec_bins=40.0):
+def get_log_mel_spectrograms(data_batch, sampling_rate, frame_size=480.0, frame_stride=160.0, num_mel_spec_bins=40.0):
+    # takes a batch of mono PCM samples
     # input data_batch (batch_size, sample_length)
     with tf.name_scope('audio_to_spec_conversion'):
         # get magnitude spectrogram via the short-term Fourier transform
@@ -407,7 +408,7 @@ def get_spectrograms(data_batch, sampling_rate, frame_size=480.0, frame_stride=1
                                    num_mel_spec_bins])
                                    
         # FIX BELOW - whether to use log psectrogram or ordinary mel spectrogram                           
-        scale_log = mel_spectrogram
+        
         '''                           
         v_max = tf.reduce_max(mel_spectrogram, axis=[1, 2], keepdims=True)
         v_min = tf.reduce_min(mel_spectrogram, axis=[1, 2], keepdims=True)
@@ -415,14 +416,14 @@ def get_spectrograms(data_batch, sampling_rate, frame_size=480.0, frame_stride=1
         scale_mel = (mel_spectrogram - v_min) / (v_max - v_min + is_zero)
 
         epsilon = 0.001
-        log_spectro = tf.log(scale_mel + epsilon)
+        log_mel_spec = tf.log(scale_mel + epsilon)
         v_min = np.log(epsilon)
         v_max = np.log(epsilon + 1)
         
-        scale_log = (log_spectro - v_min) / (v_max - v_min)
+        scale_log = (log_mel_spec - v_min) / (v_max - v_min)
         '''
     # (batch_size, num_frames, num_mel_spec_bins)
-    return scale_log
+    return mel_spectrogram
 
 '''
 def create_inference_graph(FLAGS, num_char_classes, label_encoding_length):
