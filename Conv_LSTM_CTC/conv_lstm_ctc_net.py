@@ -4,7 +4,16 @@ import os
 
 
 # directories
-saves_dir = "D:\\speech_project_saves"
+
+#main_dir = "C:\\Users\\chkar\\Desktop"   # LOCAL
+
+
+main_dir = "/lyceum/chk1g16"              # PUTTY
+
+
+saves_dir = os.patj.join(main_dir, "speech_project_saves")
+data_dir = os.patj.join(main_dir, "speech_datasets")
+
 if not os.path.isdir(saves_dir):
     os.mkdir(saves_dir)
 log_dir = os.path.join(saves_dir, "logs")

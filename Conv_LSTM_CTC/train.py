@@ -10,7 +10,7 @@ import multiprocessing
 
 def train_and_eval():    
     # Data input pipeline
-    data_gen = DataGenerator(batch_size, sampling_rate, audio_dur_in_ms)
+    data_gen = DataGenerator(batch_size, sampling_rate, audio_dur_in_ms, data_dir)
     datasets = data_gen._get_datasets()
     
     train_dataset = datasets[0]
@@ -50,7 +50,7 @@ def train_and_eval():
         init_op = tf.global_variables_initializer()
         sess.run(init_op)
 
-    print()
+    print("Start of training...")
     for epoch in range(1, num_epochs + 1):
         print("Epoch number: %d" %epoch)
         data_lists, labels_lists = data_gen._get_data_lists()

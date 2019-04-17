@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import tensorflow as tf
-from tensorflow.data import Dataset
 import collections
 from tensorflow.python.framework import dtypes
 from tensorflow.python.platform import gfile
@@ -13,10 +12,10 @@ import concurrent.futures
 
 class DataGenerator(object):
 
-    def __init__(self, batch_size, sampling_rate, audio_dur_in_ms):
-        self._train_data_dir = "D:/speech_data/train/"
-        self._val_data_dir = "D:/speech_data/val/"
-        self._test_data_dir = "D:/speech_data/test/"
+    def __init__(self, batch_size, sampling_rate, audio_dur_in_ms, data_dir):
+        self._train_data_dir = os.path.join(data_dir, "train")
+        self._val_data_dir = os.path.join(data_dir, "val")
+        self._test_data_dir = os.path.join(data_dir, "test")
         self._unknown_data_ratio = 1/6
         self._audio_dur_in_ms = audio_dur_in_ms
         self._sampling_rate = sampling_rate
@@ -114,7 +113,7 @@ class DataGenerator(object):
             data_placeholder = tf.placeholder(data.dtype, data.shape, name=("data_placeholder_%d" % i))
             labels_placeholder = tf.placeholder(labels.dtype, labels.shape, name=("labels_placeholder_%d" % i))
             self._placeholders.append((data_placeholder, labels_placeholder))
-            dataset = Dataset.from_tensor_slices((data_placeholder, labels_placeholder))
+            dataset = tf.data.Dataset.from_tensor_slices((data_placeholder, labels_placeholder))
             # use the whole dataset, model does not rely on equal sized batches
             dataset = dataset.batch(batch_size, drop_remainder=False)
             self._datasets.append(dataset)
