@@ -327,7 +327,7 @@ def optimize_loss(loss, init_lr, lr_decay_steps, lr_decay_rate):
     
     return train_op, global_step
 
-def create_train_graph(num_char_classes, label_encoding_length):
+def create_train_graph(num_char_classes, label_encoding_length, num_frames, num_mel_spec_bins):
     # batch placeholders
     # batch size is None as it is not necessarily the same all the time
     data_batch_plh = tf.placeholder(tf.float32, [None, num_frames, num_mel_spec_bins], name="data")

@@ -10,20 +10,6 @@ import librosa
 
 
 
-# Data params
-bg_nsr = 0.5
-bg_noise_prob = 0.75
-sampling_rate = 16000
-frame_size_ms = 30.0
-frame_stride_ms = 10.0
-# fg_interp_factor = audio_dur_in_ms/(audio_dur_in_ms-padding_ms
-padding_ms = 140
-audio_dur_in_ms = 1140
-num_mel_spec_bins = 46
-audio_length = int(sampling_rate * audio_dur_in_ms / 1000)
-frame_size = int(sampling_rate * frame_size_ms / 1000)
-frame_stride = int(sampling_rate * frame_stride_ms / 1000)
-
 class DataGenerator(object):
 
     def __init__(self, batch_size, data_dir):
@@ -31,6 +17,22 @@ class DataGenerator(object):
         self._val_data_dir = os.path.join(data_dir, "val")
         self._test_data_dir = os.path.join(data_dir, "test")
         self._unknown_data_ratio = 1/6
+        
+        # Data params
+        self._bg_nsr = 0.5
+        self._bg_noise_prob = 0.75
+        self._sampling_rate = 16000
+        self._frame_size_ms = 30.0
+        self._frame_stride_ms = 10.0
+        # fg_interp_factor = audio_dur_in_ms/(audio_dur_in_ms-padding_ms
+        self._padding_ms = 140
+        self._audio_dur_in_ms = 1140
+        self._num_mel_spec_bins = 46
+        self._audio_length = int(self._sampling_rate * self._audio_dur_in_ms / 1000)
+        self._frame_size = int(self._sampling_rate * self._frame_size_ms / 1000)
+        self._frame_stride = int(self._sampling_rate * self._frame_stride_ms / 1000)
+        
+        
         
         self._silence_word = "silence"
         self._silence_alias = "9"
@@ -220,13 +222,13 @@ class DataGenerator(object):
 
     # if too slow, do it with tf map
     def _decode_wav_file(self, wav_path):
-        sampling_rate_read, decoded_audio = scipy.io.wavfile.read(wav_path)
+        sampling_rate, decoded_audio = scipy.io.wavfile.read(wav_path)
         decoded_audio = decoded_audio.astype(np.float32, copy=False)
         
         # bring into the 16-bit int range
         decoded_audio /= np.power(2, 15)
         curr_audio_length = len(decoded_audio)
-        target_audio_length = int(audio_dur_in_ms * sampling_rate / 1000)
+        target_audio_length = int(self._audio_dur_in_ms * self._sampling_rate / 1000)
 
         # fix audio length by cutting or appending zeros equally from both ends
         start_index = abs(target_audio_length - curr_audio_length) // 2
