@@ -8,7 +8,7 @@ import os
 #main_dir = "C:\\Users\\chkar\\Desktop"   # LOCAL
 
 
-main_dir = "/lyceum/chk1g16"              # PUTTY
+main_dir = "/scratch/chk1g16"              # PUTTY
 
 
 saves_dir = os.path.join(main_dir, "speech_project_saves")
