@@ -265,7 +265,7 @@ class DataGenerator(object):
         return label
         
         
-    def _convert_to_log_mel_spec(data_batch):
+    def _convert_to_log_mel_spec(self, data_batch):
         # takes a batch of mono PCM samples
         # input data_batch (batch_size, sample_length)
         with tf.name_scope('audio_to_spec_conversion'):
@@ -308,7 +308,7 @@ class DataGenerator(object):
         # (batch_size, num_frames, num_mel_spec_bins)
         return scaled_log_mel_spec
     
-    def _convert_to_log_spec(decoded_audio, sampling_rate, window_size=20, step_size=10, eps=1e-10):
+    def _convert_to_log_spec(self, decoded_audio, sampling_rate, window_size=20, step_size=10, eps=1e-10):
         nperseg = int(round(window_size * sampling_rate / 1e3))
         noverlap = int(round(step_size * sampling_rate / 1e3))
         
@@ -328,7 +328,7 @@ class DataGenerator(object):
         return freqs, times, log_spec
         
         
-    def _convert_to_mfcc(decoded_audio, sampling_rate):
+    def _convert_to_mfcc(self, decoded_audio, sampling_rate):
         mel_spec = librosa.feature.melspectrogram(decoded_audio, sr=sampling_rate, n_mels=128)
         log_mel_spec = librosa.power_to_db(mel_spec, ref=np.max)
         
