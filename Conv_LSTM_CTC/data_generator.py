@@ -261,29 +261,32 @@ class DataGenerator(object):
         return label
         
         
-    def _convert_to_log_mel_spec(data_batch, sampling_rate, frame_size=480.0, frame_stride=160.0, num_mel_spec_bins=40.0):
+    def _convert_to_log_mel_spec(data_batch):
         # takes a batch of mono PCM samples
         # input data_batch (batch_size, sample_length)
         with tf.name_scope('audio_to_spec_conversion'):
             # get magnitude spectrogram via the short-term Fourier transform
             # (batch_size, num_frames, num_spectrogram_bins)
-            mag_spectrogram = tf.abs(tf.contrib.signal.stft(
-                                    data_batch, frame_length=frame_size, frame_step=frame_stride,
-                                    fft_length=frame_size))
-            num_mag_spec_bins = 1 + (frame_size // 2)
+            mag_spectrogram = tf.abs(tf.contrib.signal.stft(data_batch,
+                                                            frame_length=self._frame_size,
+                                                            frame_step=self._frame_stride,
+                                                            fft_length=self._frame_size))
+            num_mag_spec_bins = 1 + (self._frame_size // 2)
 
             # warp the linear scale to mel scale
             # [num_mag_spec_bins, num_mel_spec_bins]
-            mel_weights = tf.contrib.signal.linear_to_mel_weight_matrix(
-                    num_mel_spec_bins, num_mag_spec_bins, sampling_rate,
-                    lower_edge_hertz=20.0, upper_edge_hertz=4000.0)
+            mel_weights = tf.contrib.signal.linear_to_mel_weight_matrix(self._num_mel_spec_bins,
+                                                                        num_mag_spec_bins, 
+                                                                        self._sampling_rate,
+                                                                        lower_edge_hertz=20.0, 
+                                                                        upper_edge_hertz=4000.0)
 
             # convert the magnitude spectrogram to mel spectrogram 
             # (batch_size, num_frames, num_mel_spec_bins)
             mel_spectrogram = tf.tensordot(mag_spectrogram , mel_weights, 1)
             mel_spectrogram.set_shape([mag_spectrogram .shape[0], 
                                        mag_spectrogram .shape[1], 
-                                       num_mel_spec_bins])        
+                                       self._num_mel_spec_bins])        
             
                                       
             v_max = tf.reduce_max(mel_spectrogram, axis=[1, 2], keepdims=True)
