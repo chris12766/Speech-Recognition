@@ -8,6 +8,25 @@ import scipy.io.wavfile
 import multiprocessing
 
 
+# Training params
+num_epochs = 1
+init_lr = 0.0002
+lr_decay_steps = 0.3
+lr_decay_rate = 3800
+saves_dir = os.path.join(main_dir, "speech_project_saves")
+
+
+
+if not os.path.isdir(saves_dir):
+    os.mkdir(saves_dir)
+log_dir = os.path.join(saves_dir, "logs")
+if not os.path.isdir(log_dir):
+    os.mkdir(log_dir)
+ckpt_dir = os.path.join(saves_dir, "ckpts")
+if not os.path.isdir(ckpt_dir):
+    os.mkdir(ckpt_dir)
+    
+
 def train_and_eval():    
     # Data input pipeline
     data_gen = DataGenerator(batch_size, data_dir)
@@ -33,7 +52,7 @@ def train_and_eval():
 
     # Create train graph
     train_args, val_args, x, y = create_train_graph(data_gen._num_char_classes, data_gen._label_encoding_length,
-                                                    data_gen._num_frames, data_gen._num_mel_spec_bins)
+                                                    data_gen._num_frames, data_gen._num_mel_spec_bins, init_lr, lr_decay_steps, lr_decay_rate)
 
     # create savers
     saver = tf.train.Saver(tf.global_variables(), max_to_keep=100000)
@@ -122,7 +141,7 @@ def evaluate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
             score_sum += scores.sum()
             sum_edit_dist += edit_dist_beam.sum()
 
-            for i in range(batch_size):
+            for i in range(label_batch.shape[0]):
                 word_label = data_gen._get_label_from_encoding(label_batch[i])
                 predicted_word = data_gen._get_label_from_encoding(predictions[i])
                 

@@ -9,30 +9,12 @@ import os
 
 
 main_dir = "/scratch/chk1g16"              # PUTTY
-
-
-saves_dir = os.path.join(main_dir, "speech_project_saves")
 data_dir = os.path.join(main_dir, "speech_datasets")
 
-if not os.path.isdir(saves_dir):
-    os.mkdir(saves_dir)
-log_dir = os.path.join(saves_dir, "logs")
-if not os.path.isdir(log_dir):
-    os.mkdir(log_dir)
-ckpt_dir = os.path.join(saves_dir, "ckpts")
-if not os.path.isdir(ckpt_dir):
-    os.mkdir(ckpt_dir)
-
-
-# Training params
+# params
 batch_size = 128
-num_epochs = 1
-init_lr = 0.0002
-lr_decay_steps = 0.3
 dropout_keep_prob_train = 0.5
 # num_batches/lr_decay_rate = 2.3
-lr_decay_rate = 3800
-
 
 
 def conv2d_batch_norm_relu(input, kernel_shape, training, padding='SAME', relu=True):
@@ -329,7 +311,7 @@ def optimize_loss(loss, init_lr, lr_decay_steps, lr_decay_rate):
     
     return train_op, global_step
 
-def create_train_graph(num_char_classes, label_encoding_length, num_frames, num_mel_spec_bins):
+def create_train_graph(num_char_classes, label_encoding_length, num_frames, num_mel_spec_bins, init_lr, lr_decay_steps, lr_decay_rate):
     # batch placeholders
     # batch size is None as it is not necessarily the same all the time
     data_batch_plh = tf.placeholder(tf.float32, [None, num_frames, num_mel_spec_bins], name="data")
@@ -346,7 +328,7 @@ def create_train_graph(num_char_classes, label_encoding_length, num_frames, num_
     predictions, loss, acc_greedy, edit_dist_greedy, acc_beam, edit_dist_beam, scores = get_ctc_loss(logits, label_batch_plh)
 
     # optimizer
-    train_op, global_step = optimize_loss(loss, init_lr, lr_decay_steps, lr_decay_steps)
+    train_op, global_step = optimize_loss(loss, init_lr, lr_decay_steps, lr_decay_rate)
 
     
     summaries = tf.summary.merge_all()
