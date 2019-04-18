@@ -28,9 +28,10 @@ class DataGenerator(object):
         self._padding_ms = 140
         self._audio_dur_in_ms = 1140
         self._num_mel_spec_bins = 46
-        self._audio_length = int(self._sampling_rate * self._audio_dur_in_ms / 1000)
-        self._frame_size = int(self._sampling_rate * self._frame_size_ms / 1000)
-        self._frame_stride = int(self._sampling_rate * self._frame_stride_ms / 1000)
+        self._num_frames = 112
+        self._audio_length = int(self._sampling_rate * self._audio_dur_in_ms / 1000) # 18,240
+        self._frame_size = int(self._sampling_rate * self._frame_size_ms / 1000)     # 480
+        self._frame_stride = int(self._sampling_rate * self._frame_stride_ms / 1000) # 160
         
         
         
@@ -270,7 +271,7 @@ class DataGenerator(object):
         # input data_batch (batch_size, sample_length)
         with tf.name_scope('audio_to_spec_conversion'):
             # get magnitude spectrogram via the short-term Fourier transform
-            # (batch_size, num_frames, num_spectrogram_bins)
+            # (batch_size, num_frames,=112 num_mag_spec_bins)
             mag_spectrogram = tf.abs(tf.contrib.signal.stft(data_batch,
                                                             frame_length=self._frame_size,
                                                             frame_step=self._frame_stride,
@@ -305,7 +306,7 @@ class DataGenerator(object):
             
             scaled_log_mel_spec = (log_mel_spec - v_min) / (v_max - v_min)
             
-        # (batch_size, num_frames, num_mel_spec_bins)
+        # (batch_size, num_frames=112, num_mel_spec_bins=46)
         return scaled_log_mel_spec
     
     def _convert_to_log_spec(self, decoded_audio, sampling_rate, window_size=20, step_size=10, eps=1e-10):

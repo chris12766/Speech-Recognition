@@ -33,7 +33,7 @@ def train_and_eval():
 
     # Create train graph
     train_args, val_args, x, y = create_train_graph(data_gen._num_char_classes, data_gen._label_encoding_length,
-                                                    data_gen._frame_size, data_gen._num_mel_spec_bins)
+                                                    data_gen._num_frames, data_gen._num_mel_spec_bins)
 
     # create savers
     saver = tf.train.Saver(tf.global_variables(), max_to_keep=100000)
