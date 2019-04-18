@@ -175,7 +175,7 @@ class DataGenerator(object):
             if not wav_path.endswith(".wav"):
                 continue
             print(wav_path)
-            curr_word = wav_path.split("//")[-2].lower()
+            curr_word = wav_path.split("\/")[-2].lower()
 
             # get encodings
             encoding = self._get_word_encoding(curr_word)
