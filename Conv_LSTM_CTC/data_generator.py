@@ -24,7 +24,7 @@ class DataGenerator(object):
         self._sampling_rate = 16000
         self._frame_size_ms = 30.0
         self._frame_stride_ms = 10.0
-        # fg_interp_factor = audio_dur_in_ms/(audio_dur_in_ms-padding_ms
+        #fg_interp_factor = audio_dur_in_ms/(audio_dur_in_ms-padding_ms
         self._padding_ms = 140
         self._audio_dur_in_ms = 1140
         self._num_mel_spec_bins = 46
@@ -128,8 +128,12 @@ class DataGenerator(object):
             labels_placeholder = tf.placeholder(labels.dtype, labels.shape, name=("labels_placeholder_%d" % i))
             self._placeholders.append((data_placeholder, labels_placeholder))
             dataset = tf.data.Dataset.from_tensor_slices((data_placeholder, labels_placeholder))
+            
             # use the whole dataset, model does not rely on equal sized batches
             dataset = dataset.batch(batch_size, drop_remainder=False)
+            
+            dataset = dataset.map(lambda x : self._convert_to_log_mel_spec(x), num_parallel_calls=10)
+            
             self._datasets.append(dataset)
         
         
@@ -304,7 +308,7 @@ class DataGenerator(object):
         # (batch_size, num_frames, num_mel_spec_bins)
         return scaled_log_mel_spec
     
-    def _convert_to_log_specgrams(decoded_audio, sampling_rate, window_size=20, step_size=10, eps=1e-10):
+    def _convert_to_log_spec(decoded_audio, sampling_rate, window_size=20, step_size=10, eps=1e-10):
         nperseg = int(round(window_size * sampling_rate / 1e3))
         noverlap = int(round(step_size * sampling_rate / 1e3))
         
