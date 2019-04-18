@@ -265,7 +265,7 @@ class DataGenerator(object):
         return label
         
         
-    def _convert_to_log_mel_spec(self, data_batch):
+    def convert_to_log_mel_spec(data_batch):
         # takes a batch of mono PCM samples
         # input data_batch (batch_size, sample_length)
         with tf.name_scope('audio_to_spec_conversion'):
