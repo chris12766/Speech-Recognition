@@ -174,7 +174,7 @@ class DataGenerator(object):
             # filter non-wav files
             if not wav_path.endswith(".wav"):
                 continue
-            curr_word = wav_path.split("\\")[-2].lower()
+            curr_word = wav_path.split("//")[-2].lower()
 
             # get encodings
             encoding = self._get_word_encoding(curr_word)
@@ -194,7 +194,7 @@ class DataGenerator(object):
         if not os.path.exists(silence_dir):
             os.makedirs(silence_dir)
         
-        silence_file_path = os.path.join(silence_dir, "silence.wav").replace("/", "\\")            # remove replace in linux
+        silence_file_path = os.path.join(silence_dir, "silence.wav")#.replace("/", "\\")            # remove replace in linux
         silence_encoded = np.zeros([self._silence_length], dtype=np.int16)
         scipy.io.wavfile.write(silence_file_path, 16000, silence_encoded)
         
