@@ -174,6 +174,7 @@ class DataGenerator(object):
             # filter non-wav files
             if not wav_path.endswith(".wav"):
                 continue
+            print(wav_path)
             curr_word = wav_path.split("//")[-2].lower()
 
             # get encodings
