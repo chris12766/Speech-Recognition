@@ -133,8 +133,7 @@ class DataGenerator(object):
             dataset = tf.data.experimental.map_and_batch(lambda x : self._convert_to_log_mel_spec(x),
                                                          batch_size,
                                                          num_parallel_batches=10,
-                                                         drop_remainder=False,
-                                                         num_parallel_calls=10)
+                                                         drop_remainder=False)
             
             #dataset = dataset.batch(batch_size, drop_remainder=False)
             
