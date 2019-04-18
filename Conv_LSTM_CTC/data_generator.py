@@ -130,9 +130,15 @@ class DataGenerator(object):
             dataset = tf.data.Dataset.from_tensor_slices((data_placeholder, labels_placeholder))
             
             # use the whole dataset, model does not rely on equal sized batches
-            dataset = dataset.batch(batch_size, drop_remainder=False)
+            dataset = tf.data.experimental.map_and_batch(lambda x : self._convert_to_log_mel_spec(x),
+                                                         batch_size,
+                                                         num_parallel_batches=10,
+                                                         drop_remainder=False,
+                                                         num_parallel_calls=10)
             
-            dataset = dataset.map(lambda x : self._convert_to_log_mel_spec(x), num_parallel_calls=10)
+            #dataset = dataset.batch(batch_size, drop_remainder=False)
+            
+            #dataset = dataset.map(lambda x : self._convert_to_log_mel_spec(x), num_parallel_calls=10)
             
             self._datasets.append(dataset)
         
@@ -265,7 +271,7 @@ class DataGenerator(object):
         return label
         
         
-    def convert_to_log_mel_spec(data_batch):
+    def _convert_to_log_mel_spec(self, data_batch):
         # takes a batch of mono PCM samples
         # input data_batch (batch_size, sample_length)
         with tf.name_scope('audio_to_spec_conversion'):
