@@ -10,7 +10,7 @@ import multiprocessing
 
 def train_and_eval():    
     # Data input pipeline
-    data_gen = DataGenerator(batch_size, audio_dur_in_ms, data_dir)
+    data_gen = DataGenerator(batch_size, data_dir)
     datasets = data_gen._get_datasets()
     
     train_dataset = datasets[0]
