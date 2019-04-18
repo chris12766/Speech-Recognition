@@ -34,21 +34,6 @@ dropout_keep_prob_train = 0.5
 lr_decay_rate = 3800
 
 
-# Data params
-bg_nsr = 0.5
-bg_noise_prob = 0.75
-sampling_rate = 16000
-frame_size_ms = 30.0
-frame_stride_ms = 10.0
-# fg_interp_factor = audio_dur_in_ms/(audio_dur_in_ms-padding_ms
-padding_ms = 140
-audio_dur_in_ms = 1140
-
-
-# Model params
-num_mel_spec_bins = 46
-
-
 
 def conv2d_batch_norm_relu(input, kernel_shape, training, padding='SAME', relu=True):
     # create conv filter from random normal distr with mean 0 and std dev 0.01
@@ -343,25 +328,17 @@ def optimize_loss(loss, init_lr, lr_decay_steps, lr_decay_rate):
     return train_op, global_step
 
 def create_train_graph(num_char_classes, label_encoding_length):
-    audio_length = int(sampling_rate * audio_dur_in_ms / 1000)
-    frame_size = int(sampling_rate * frame_size_ms / 1000)
-    frame_stride = int(sampling_rate * frame_stride_ms / 1000)
-
     # batch placeholders
     # batch size is None as it is not necessarily the same all the time
-    data_batch_plh = tf.placeholder(tf.float32, [None, audio_length], name="audio")
+    data_batch_plh = tf.placeholder(tf.float32, [None, num_frames, num_mel_spec_bins], name="data")
     label_batch_plh = tf.placeholder(tf.int32, [None, label_encoding_length], name="label")
     
     # training placeholders
     dropout_keep_prob = tf.placeholder_with_default(1.0, shape=(), name="dropout_keep_prob")
     batch_norm_train_mode = tf.placeholder(tf.bool, name='batch_norm_train_mode')
-    
-    # convert audio to spectrograms
-    # (batch_size, num_frames, num_mel_spec_bins)
-    spectrograms = get_log_mel_spectrograms(data_batch_plh, sampling_rate, frame_size, frame_stride, num_mel_spec_bins)
 
     # inference
-    logits = conv_lstm_net(spectrograms, num_char_classes, dropout_keep_prob, batch_norm_train_mode)
+    logits = conv_lstm_net(data_batch_plh, num_char_classes, dropout_keep_prob, batch_norm_train_mode)
     
     # loss and performance metrics
     predictions, loss, acc_greedy, edit_dist_greedy, acc_beam, edit_dist_beam, scores = get_ctc_loss(logits, label_batch_plh)
@@ -381,49 +358,6 @@ def create_train_graph(num_char_classes, label_encoding_length):
     
     return (ops_to_run + [train_op], train_feed_dict), (ops_to_run + [predictions], val_feed_dict), data_batch_plh, label_batch_plh
 
-
-
-def get_log_mel_spectrograms(data_batch, sampling_rate, frame_size=480.0, frame_stride=160.0, num_mel_spec_bins=40.0):
-    # takes a batch of mono PCM samples
-    # input data_batch (batch_size, sample_length)
-    with tf.name_scope('audio_to_spec_conversion'):
-        # get magnitude spectrogram via the short-term Fourier transform
-        # (batch_size, num_frames, num_spectrogram_bins)
-        mag_spectrogram = tf.abs(tf.contrib.signal.stft(
-                                data_batch, frame_length=frame_size, frame_step=frame_stride,
-                                fft_length=frame_size))
-        num_mag_spec_bins = 1 + (frame_size // 2)
-
-        # warp the linear scale to mel scale
-        # [num_mag_spec_bins, num_mel_spec_bins]
-        mel_weights = tf.contrib.signal.linear_to_mel_weight_matrix(
-                num_mel_spec_bins, num_mag_spec_bins, sampling_rate,
-                lower_edge_hertz=20.0, upper_edge_hertz=4000.0)
-
-        # convert the magnitude spectrogram to mel spectrogram 
-        # (batch_size, num_frames, num_mel_spec_bins)
-        mel_spectrogram = tf.tensordot(mag_spectrogram , mel_weights, 1)
-        mel_spectrogram.set_shape([mag_spectrogram .shape[0], 
-                                   mag_spectrogram .shape[1], 
-                                   num_mel_spec_bins])
-                                   
-        # FIX BELOW - whether to use log psectrogram or ordinary mel spectrogram                           
-        
-        '''                           
-        v_max = tf.reduce_max(mel_spectrogram, axis=[1, 2], keepdims=True)
-        v_min = tf.reduce_min(mel_spectrogram, axis=[1, 2], keepdims=True)
-        is_zero = tf.cast(tf.equal(v_max - v_min, 0), tf.float32)
-        scale_mel = (mel_spectrogram - v_min) / (v_max - v_min + is_zero)
-
-        epsilon = 0.001
-        log_mel_spec = tf.log(scale_mel + epsilon)
-        v_min = np.log(epsilon)
-        v_max = np.log(epsilon + 1)
-        
-        scale_log = (log_mel_spec - v_min) / (v_max - v_min)
-        '''
-    # (batch_size, num_frames, num_mel_spec_bins)
-    return mel_spectrogram
 
 '''
 def create_inference_graph(FLAGS, num_char_classes, label_encoding_length):

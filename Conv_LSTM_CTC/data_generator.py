@@ -10,6 +10,20 @@ import librosa
 
 
 
+# Data params
+bg_nsr = 0.5
+bg_noise_prob = 0.75
+sampling_rate = 16000
+frame_size_ms = 30.0
+frame_stride_ms = 10.0
+# fg_interp_factor = audio_dur_in_ms/(audio_dur_in_ms-padding_ms
+padding_ms = 140
+audio_dur_in_ms = 1140
+num_mel_spec_bins = 46
+audio_length = int(sampling_rate * audio_dur_in_ms / 1000)
+frame_size = int(sampling_rate * frame_size_ms / 1000)
+frame_stride = int(sampling_rate * frame_stride_ms / 1000)
+
 class DataGenerator(object):
 
     def __init__(self, batch_size, sampling_rate, audio_dur_in_ms, data_dir):
@@ -174,7 +188,6 @@ class DataGenerator(object):
             # filter non-wav files
             if not wav_path.endswith(".wav"):
                 continue
-            print(wav_path)
             curr_word = wav_path.split("/")[-2].lower()
 
             # get encodings
@@ -248,7 +261,47 @@ class DataGenerator(object):
         return label
         
         
-    def _get_log_specgram(decoded_audio, sampling_rate, window_size=20, step_size=10, eps=1e-10):
+    def _convert_to_log_mel_spec(data_batch, sampling_rate, frame_size=480.0, frame_stride=160.0, num_mel_spec_bins=40.0):
+        # takes a batch of mono PCM samples
+        # input data_batch (batch_size, sample_length)
+        with tf.name_scope('audio_to_spec_conversion'):
+            # get magnitude spectrogram via the short-term Fourier transform
+            # (batch_size, num_frames, num_spectrogram_bins)
+            mag_spectrogram = tf.abs(tf.contrib.signal.stft(
+                                    data_batch, frame_length=frame_size, frame_step=frame_stride,
+                                    fft_length=frame_size))
+            num_mag_spec_bins = 1 + (frame_size // 2)
+
+            # warp the linear scale to mel scale
+            # [num_mag_spec_bins, num_mel_spec_bins]
+            mel_weights = tf.contrib.signal.linear_to_mel_weight_matrix(
+                    num_mel_spec_bins, num_mag_spec_bins, sampling_rate,
+                    lower_edge_hertz=20.0, upper_edge_hertz=4000.0)
+
+            # convert the magnitude spectrogram to mel spectrogram 
+            # (batch_size, num_frames, num_mel_spec_bins)
+            mel_spectrogram = tf.tensordot(mag_spectrogram , mel_weights, 1)
+            mel_spectrogram.set_shape([mag_spectrogram .shape[0], 
+                                       mag_spectrogram .shape[1], 
+                                       num_mel_spec_bins])        
+            
+                                      
+            v_max = tf.reduce_max(mel_spectrogram, axis=[1, 2], keepdims=True)
+            v_min = tf.reduce_min(mel_spectrogram, axis=[1, 2], keepdims=True)
+            is_zero = tf.cast(tf.equal(v_max - v_min, 0), tf.float32)
+            scaled_mel_spec = (mel_spectrogram - v_min) / (v_max - v_min + is_zero)
+
+            epsilon = 0.001
+            log_mel_spec = tf.log(scaled_mel_spec + epsilon)
+            v_min = np.log(epsilon)
+            v_max = np.log(epsilon + 1)
+            
+            scaled_log_mel_spec = (log_mel_spec - v_min) / (v_max - v_min)
+            
+        # (batch_size, num_frames, num_mel_spec_bins)
+        return scaled_log_mel_spec
+    
+    def _convert_to_log_specgrams(decoded_audio, sampling_rate, window_size=20, step_size=10, eps=1e-10):
         nperseg = int(round(window_size * sampling_rate / 1e3))
         noverlap = int(round(step_size * sampling_rate / 1e3))
         
@@ -268,7 +321,7 @@ class DataGenerator(object):
         return freqs, times, log_spec
         
         
-    def _get_mfcc(decoded_audio, sampling_rate):
+    def _convert_to_mfcc(decoded_audio, sampling_rate):
         mel_spec = librosa.feature.melspectrogram(decoded_audio, sr=sampling_rate, n_mels=128)
         log_mel_spec = librosa.power_to_db(mel_spec, ref=np.max)
         
