@@ -85,20 +85,8 @@ def train_and_eval():
                 #  Run validation and save ckpt.
                 evaluate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_val, len(labels_lists[1]), data_gen)
                 curr_step += 1
-                
-                
-                
-                
-                
-                
-                break
-                
-                
-                
-                
-                
             except tf.errors.OutOfRangeError:
-                print("Epoch ended")
+                print()
                 break
         
         # save after each epoch
@@ -109,11 +97,11 @@ def train_and_eval():
 
 
 def evaluate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_val, val_dataset_size, data_gen):
-    avg_acc_beam = 0
-    avg_loss = 0
-    sum_score = 0
-    wrong_submits = 0
-    sum_edist = 0
+    sum_acc_beam = 0
+    loss_sum = 0
+    score_sum = 0
+    num_correct_preds = 0
+    sum_edit_dist = 0
     
     while True:
         try:
@@ -129,37 +117,28 @@ def evaluate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
             valid_writer.add_summary(summary, global_step)
 
             
-            scale = batch_size * 100 / val_dataset_size
-            avg_acc_beam += acc_beam * scale
-            avg_loss += loss * scale
-            sum_score += scores.sum()
-            sum_edist += edit_dist_beam.sum() / val_dataset_size
+            sum_acc_beam += acc_beam
+            loss_sum += loss
+            score_sum += scores.sum()
+            sum_edit_dist += edit_dist_beam.sum()
 
             for i in range(batch_size):
-                true_submit = data_gen._get_label_from_encoding(label_batch[i])
-                pred_submit = data_gen._get_label_from_encoding(predictions[i])
-                wrong_submits += int(pred_submit != true_submit)
+                word_label = data_gen._get_label_from_encoding(label_batch[i])
+                predicted_word = data_gen._get_label_from_encoding(predictions[i])
                 
-            
-
-
-
-
-            
-            break
-            
-            
-            
-            
-            
+                if word_label == predicted_word:
+                    num_correct_preds += 1
         except tf.errors.OutOfRangeError:
             break
     
-
-    acc_submit = (1 - wrong_submits / val_dataset_size) * 100
-    print('curr_step #%d, epoch #%d' %(curr_step, epoch))
-    print("Validation stats: acc_beam = %.2f, acc_submit = %.2f" %(avg_acc_beam, acc_submit))
-    print("loss = %.4f, sum_edist = %.4f, confidence = %.3f" %(avg_loss/100,sum_edist,sum_score/val_dataset_size))
+    
+    # calculate statistics
+    print("Validation stats for epoch #%d:" % epoch) 
+    print("accuracy = %.5f" % (num_correct_preds / val_dataset_size))
+    print("avg_acc_beam = %.5f" % (sum_acc_beam / val_dataset_size))
+    print("avg_loss = %.4f" % (loss_sum / val_dataset_size))
+    print("avg_edit_dist = %.4f" % (sum_edit_dist / val_dataset_size))
+    print("confidence = %.3f" %(score_sum / val_dataset_size))
 
 
 

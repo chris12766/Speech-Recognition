@@ -268,7 +268,7 @@ class DataGenerator(object):
         
     def _convert_to_log_mel_spec(self, data_batch):
         # takes a batch of mono PCM samples
-        # input data_batch (batch_size, sample_length)
+        # input data_batch (batch_size, audio_length)
         with tf.name_scope('audio_to_spec_conversion'):
             # get magnitude spectrogram via the short-term Fourier transform
             # (batch_size, num_frames,=112 num_mag_spec_bins)

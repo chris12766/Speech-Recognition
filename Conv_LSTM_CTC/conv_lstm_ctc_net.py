@@ -285,6 +285,8 @@ def get_ctc_loss(logits, label_batch):
     tf.summary.scalar('acc_greedy', acc_greedy)
     tf.summary.scalar('edit_dist_greedy', edit_dist_greedy)
     tf.summary.scalar('confidence_score', tf.reduce_mean(scores))
+    tf.summary.scalar('confidence_score', edit_dist_beam)
+    tf.summary.scalar('confidence_score', acc_beam)
 
     return predictions, loss, acc_greedy, edit_dist_greedy, acc_beam, edit_dist_beam, scores
 
