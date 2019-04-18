@@ -129,11 +129,13 @@ class DataGenerator(object):
             self._placeholders.append((data_placeholder, labels_placeholder))
             dataset = tf.data.Dataset.from_tensor_slices((data_placeholder, labels_placeholder))
             
+            
+            trans_func = tf.data.experimental.map_and_batch(lambda x : self._convert_to_log_mel_spec(x),
+                                                            batch_size,
+                                                            num_parallel_batches=10,
+                                                            drop_remainder=False)
             # use the whole dataset, model does not rely on equal sized batches
-            dataset = tf.data.experimental.map_and_batch(lambda x : self._convert_to_log_mel_spec(x),
-                                                         batch_size,
-                                                         num_parallel_batches=10,
-                                                         drop_remainder=False)
+            dataset = dataset.apply(trans_func)
             
             #dataset = dataset.batch(batch_size, drop_remainder=False)
             
