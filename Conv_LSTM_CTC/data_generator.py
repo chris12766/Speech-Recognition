@@ -129,17 +129,10 @@ class DataGenerator(object):
             self._placeholders.append((data_placeholder, labels_placeholder))
             dataset = tf.data.Dataset.from_tensor_slices((data_placeholder, labels_placeholder))
             
-            
-            trans_func = tf.data.experimental.map_and_batch(lambda x,y : (self._convert_to_log_mel_spec(x), y),
-                                                            batch_size,
-                                                            num_parallel_batches=10,
-                                                            drop_remainder=False)
             # use the whole dataset, model does not rely on equal sized batches
-            dataset = dataset.apply(trans_func)
+            dataset = dataset.batch(batch_size, drop_remainder=False)
             
-            #dataset = dataset.batch(batch_size, drop_remainder=False)
-            
-            #dataset = dataset.map(lambda x : self._convert_to_log_mel_spec(x), num_parallel_calls=10)
+            dataset = dataset.map(lambda x,y : (self._convert_to_log_mel_spec(x), y), num_parallel_calls=10)
             
             self._datasets.append(dataset)
         
@@ -271,7 +264,7 @@ class DataGenerator(object):
             return self._unknown_label
         return label
         
-    '''    
+        
     def _convert_to_log_mel_spec(self, data_batch):
         # takes a batch of mono PCM samples
         # input data_batch (batch_size, sample_length)
@@ -279,53 +272,6 @@ class DataGenerator(object):
             # get magnitude spectrogram via the short-term Fourier transform
             # (batch_size, num_frames, num_spectrogram_bins)
             mag_spectrogram = tf.abs(tf.contrib.signal.stft(data_batch,
-                                                            frame_length=self._frame_size,
-                                                            frame_step=self._frame_stride,
-                                                            fft_length=self._frame_size))
-            num_mag_spec_bins = 1 + (self._frame_size // 2)
-
-            # warp the linear scale to mel scale
-            # [num_mag_spec_bins, num_mel_spec_bins]
-            mel_weights = tf.contrib.signal.linear_to_mel_weight_matrix(self._num_mel_spec_bins,
-                                                                        num_mag_spec_bins, 
-                                                                        self._sampling_rate,
-                                                                        lower_edge_hertz=20.0, 
-                                                                        upper_edge_hertz=4000.0)
-
-            # convert the magnitude spectrogram to mel spectrogram 
-            # (batch_size, num_frames, num_mel_spec_bins)
-            mel_spectrogram = tf.tensordot(mag_spectrogram , mel_weights, 1)
-            mel_spectrogram.set_shape([mag_spectrogram .shape[0], 
-                                       mag_spectrogram .shape[1], 
-                                       self._num_mel_spec_bins])        
-            
-                                      
-            v_max = tf.reduce_max(mel_spectrogram, axis=[1, 2], keepdims=True)
-            v_min = tf.reduce_min(mel_spectrogram, axis=[1, 2], keepdims=True)
-            is_zero = tf.cast(tf.equal(v_max - v_min, 0), tf.float32)
-            scaled_mel_spec = (mel_spectrogram - v_min) / (v_max - v_min + is_zero)
-
-            epsilon = 0.001
-            log_mel_spec = tf.log(scaled_mel_spec + epsilon)
-            v_min = np.log(epsilon)
-            v_max = np.log(epsilon + 1)
-            
-            scaled_log_mel_spec = (log_mel_spec - v_min) / (v_max - v_min)
-            
-        # (batch_size, num_frames, num_mel_spec_bins)
-        return scaled_log_mel_spec
-    '''
-    
-    def _convert_to_log_mel_spec(self, audio):
-        # takes a batch of mono PCM samples
-        # input shape: (sample_length)
-        with tf.name_scope('audio_to_spec_conversion'):
-            # get magnitude spectrogram via the short-term Fourier transform
-            # (batch_size, num_frames, num_spectrogram_bins)
-            print(audio.shape)
-            sys.exit()
-            
-            mag_spectrogram = tf.abs(tf.contrib.signal.stft(audio,
                                                             frame_length=self._frame_size,
                                                             frame_step=self._frame_stride,
                                                             fft_length=self._frame_size))
