@@ -322,6 +322,9 @@ class DataGenerator(object):
         with tf.name_scope('audio_to_spec_conversion'):
             # get magnitude spectrogram via the short-term Fourier transform
             # (batch_size, num_frames, num_spectrogram_bins)
+            print(audio.shape)
+            sys.exit()
+            
             mag_spectrogram = tf.abs(tf.contrib.signal.stft(audio,
                                                             frame_length=self._frame_size,
                                                             frame_step=self._frame_stride,
