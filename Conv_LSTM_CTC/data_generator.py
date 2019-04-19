@@ -28,6 +28,15 @@ class DataGenerator(object):
                     line = fp.readline()
         
         
+        self._batch = []
+        with open(os.path.join(data_dir, "batch.txt")) as fp:  
+            line = fp.readline()
+            while line:
+                self._bad_paths.append(line)
+                line = fp.readline()
+                self._batch.append(line)
+                line = fp.readline()
+        
         
         # Data params
         self._bg_nsr = 0.5
@@ -222,6 +231,12 @@ class DataGenerator(object):
             if not wav_path.endswith(".wav") or "/".join(wav_path.split("/")[-2:]) in self._bad_paths:
                 print("skipped")
                 continue
+                
+            if not "/".join(wav_path.split("/")[-2:]) in self._batch:
+                continue
+            
+            
+            
             curr_word = wav_path.split("/")[-2].lower()
             
             

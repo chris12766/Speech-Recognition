@@ -12,7 +12,7 @@ main_dir = "/scratch/chk1g16"              # PUTTY
 data_dir = os.path.join(main_dir, "speech_datasets")
 
 # params
-batch_size = 128
+batch_size = 1#128
 dropout_keep_prob_train = 0.5
 # num_batches/lr_decay_rate = 2.3
 
