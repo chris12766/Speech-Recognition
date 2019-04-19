@@ -184,6 +184,7 @@ class DataGenerator(object):
             
             wav_paths, label_list = zip(*known_data)
            
+            '''
             with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
                 decoded_audios = np.array(list(executor.map(self._decode_wav_file, wav_paths)))
             '''
@@ -192,11 +193,11 @@ class DataGenerator(object):
             for wav_path, label in known_data:
                 decoded_audios.append(self._decode_wav_file(wav_path))
                 label_list.append([wav_path, label])
-            '''
+                break
             
             
             self._data_lists.append(decoded_audios)
-            self._labels_lists.append(np.array(label_list))
+            self._labels_lists.append(np.array(label_list, dtype=object))
         
         
         
