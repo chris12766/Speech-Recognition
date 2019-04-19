@@ -39,7 +39,7 @@ class DataGenerator(object):
                 line = fp.readline()
                 if count % 2 == 0:
                     self._batch.append(line)
-                    print("adding", line)
+                    print("adding", line, "end")
 
         
         
