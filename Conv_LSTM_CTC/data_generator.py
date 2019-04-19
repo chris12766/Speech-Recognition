@@ -29,7 +29,7 @@ class DataGenerator(object):
         
         
         self._batch = []
-        with open(os.path.join(data_dir, "batch.txt")) as fp:  
+        with open(os.path.join(data_dir, "batch.out")) as fp:  
             line = fp.readline()
             while line:
                 self._bad_paths.append(line)
