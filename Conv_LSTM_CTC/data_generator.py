@@ -204,7 +204,7 @@ class DataGenerator(object):
         for wav_path in gfile.Glob(os.path.join(data_dir, '*', '*nohash*.wav')):
             # filter non-wav files
             if not wav_path.endswith(".wav") or "/".join(wav_path.split("/")[-2:]) in self._bad_paths:
-                print(skipped)
+                print("skipped")
                 continue
             curr_word = wav_path.split("/")[-2].lower()
             
