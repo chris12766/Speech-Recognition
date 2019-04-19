@@ -31,7 +31,7 @@ class DataGenerator(object):
         
 
         self._batch = []
-        with open(os.path.join(data_dir, "batch.out")) as fp:  
+        with open(os.path.join(data_dir, "batch_1.out")) as fp:  
             line = fp.readline()
             count = 1
             while line:
@@ -236,9 +236,9 @@ class DataGenerator(object):
                 print("skipped")
                 continue
                 
-            #if "train" in wav_path and not "/".join(wav_path.split("/")[-3:]) in self._batch:
-            #    print("no", "/".join(wav_path.split("/")[-3:]))
-            #    continue
+            if "train" in wav_path and not "/".join(wav_path.split("/")[-3:]) in self._batch:
+                #print("no", "/".join(wav_path.split("/")[-3:]))
+                continue
             
             print("added", wav_path)
             
