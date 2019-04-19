@@ -192,9 +192,9 @@ class DataGenerator(object):
             label_list = []
             for wav_path, label in known_data:
                 decoded_audios.append(self._decode_wav_file(wav_path))
-                label_list.append(label.append(wav_path))
-                print(label)
-                print(label.append(wav_path))
+                
+                label.append(wav_path)
+                label_list.append(label)
                 break
             
             
