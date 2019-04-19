@@ -188,7 +188,7 @@ def conv_lstm_net(input, num_char_classes, dropout_keep_prob, batch_norm_train_m
             fc_net = tf.nn.dropout(fc_net, keep_prob=dropout_keep_prob)
            
         # use batch_norm instead of biases
-        # (batch_size=?, data_seq_len=12, num_char_classes=28)
+        # (batch_size=?, max_time/data_seq_len=12, num_char_classes=28)
         logits = tf.contrib.layers.fully_connected(fc_net,
                                 num_outputs=num_char_classes,
                                 activation_fn=None,
@@ -202,9 +202,17 @@ def conv_lstm_net(input, num_char_classes, dropout_keep_prob, batch_norm_train_m
 
 def get_ctc_loss(logits, label_batch):
     # logits: [batch_size, max_time, num_classes]
+    
+    
     # 1-D tensor showing the length for each label in the batch
     batch_labels_lengths = tf.fill([tf.shape(label_batch)[0]], tf.shape(label_batch)[1])
 
+    print()
+    for i in range(tf.shape(label_batch)[0]):
+        print(label_batch[i,:])
+    print()
+    
+    
     with tf.name_scope('loss'):
         # get sparse represenattion of the labels
         non_zero_elems_coords = tf.where(tf.not_equal(label_batch, 0))
