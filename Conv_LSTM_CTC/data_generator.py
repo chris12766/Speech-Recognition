@@ -18,6 +18,20 @@ class DataGenerator(object):
         self._test_data_dir = os.path.join(data_dir, "test")
         self._unknown_data_ratio = 1/6
         
+        '''
+        bad_file_records = ["bad_samples.txt", "silences"]
+        for f in bad_file_records:
+            with open(os.join.path(data_dir, f)) as fp:  
+                line = fp.readline()
+                while line:
+                    bad_word_to_path
+                    
+                    
+                    
+                    line = fp.readline()
+        '''
+        
+        
         # Data params
         self._bg_nsr = 0.5
         self._bg_noise_prob = 0.75
@@ -196,6 +210,9 @@ class DataGenerator(object):
                 continue
             curr_word = wav_path.split("/")[-2].lower()
 
+            print(wav_path)
+            sys.exit()
+            
             # get encodings
             encoding = self._get_word_encoding(curr_word)
             if encoding:
