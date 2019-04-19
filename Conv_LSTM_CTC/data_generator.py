@@ -196,7 +196,7 @@ class DataGenerator(object):
                 label.append(wav_path)
                 label_list.append(tuple(label))
                 cnt += 1
-                if cnt > 150:
+                if cnt > 500:
                     break
             
             
