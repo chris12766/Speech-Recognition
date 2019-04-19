@@ -19,7 +19,7 @@ class DataGenerator(object):
         self._unknown_data_ratio = 1/6
         
         self._bad_paths = []
-        bad_file_records = ["bad_samples.txt", "silences"]
+        bad_file_records = ["bad_samples.txt", "silences.txt"]
         for f in bad_file_records:
             with open(os.path.join(data_dir, f)) as fp:  
                 line = fp.readline()
