@@ -148,6 +148,7 @@ class DataGenerator(object):
         return self._data_lists, self._labels_lists
 
 
+        
     '''
     def _num_total_batches(self):
         if self._data_size == 0:
