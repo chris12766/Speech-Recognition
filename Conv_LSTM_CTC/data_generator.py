@@ -42,12 +42,6 @@ class DataGenerator(object):
 
         
         
-        
-        for i in self._batch:
-            print(i)
-        
-        sys.exit()
-        
         # Data params
         self._bg_nsr = 0.5
         self._bg_noise_prob = 0.75
