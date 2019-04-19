@@ -91,6 +91,9 @@ def train_and_eval():
                 feed_dict[x] = data_batch
                 feed_dict[y] = label_batch
                 
+                print()
+                print(label_batch)
+                print()
                 
                 summary, global_step, loss, acc_greedy, edit_dist_greedy, \
                         acc_beam, edit_dist_beam, scores, _ = sess.run(train_args[0],

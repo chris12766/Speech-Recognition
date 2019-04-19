@@ -206,12 +206,6 @@ def get_ctc_loss(logits, label_batch):
     
     # 1-D tensor showing the length for each label in the batch
     batch_labels_lengths = tf.fill([tf.shape(label_batch)[0]], tf.shape(label_batch)[1])
-
-    print()
-    for i in range(tf.shape(label_batch)[0]):
-        print(label_batch[i,:])
-    print()
-    
     
     with tf.name_scope('loss'):
         # get sparse represenattion of the labels
