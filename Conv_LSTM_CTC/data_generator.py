@@ -198,7 +198,7 @@ class DataGenerator(object):
             
             
             self._data_lists.append(decoded_audios)
-            self._labels_lists.append(np.array(label_list, dtype='S30, S30, S30, S30, i4'))
+            self._labels_lists.append(np.array(label_list, dtype='i4, i4, i4, i4, S30'))
         
         
         
