@@ -232,7 +232,7 @@ class DataGenerator(object):
                 print("skipped")
                 continue
                 
-            if not "/".join(wav_path.split("/")[-2:]) in self._batch:
+            if wav_path.contains("train") and not "/".join(wav_path.split("/")[-2:]) in self._batch:
                 continue
             
             
