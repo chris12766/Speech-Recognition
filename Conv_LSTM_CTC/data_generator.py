@@ -199,7 +199,7 @@ class DataGenerator(object):
             
             
             self._data_lists.append(decoded_audios)
-            self._labels_lists.append(np.array(label_list))
+            self._labels_lists.append(np.array(label_list, dtype=object))
         
         
         
