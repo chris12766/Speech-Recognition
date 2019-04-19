@@ -7,6 +7,7 @@ from tensorflow.python.platform import gfile
 import scipy.io.wavfile
 import concurrent.futures
 import librosa
+import re
 
 
 
@@ -24,8 +25,11 @@ class DataGenerator(object):
             with open(os.path.join(data_dir, f)) as fp:  
                 line = fp.readline()
                 while line:
-                    self._bad_paths.append(line)
+                    self._bad_paths.append(re.sub('[^a-zA-Z0-9\n\.]', '', line))
                     line = fp.readline()
+        
+        
+        
         
         
         self._batch = []
