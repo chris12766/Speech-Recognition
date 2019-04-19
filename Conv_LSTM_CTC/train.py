@@ -94,6 +94,11 @@ def train_and_eval():
                 
                 label_batch = label_batch[:,:4].astype('int32')
                 
+                print(label_batch)
+                print(label_batch.dtype)
+                
+                sys.exit()
+                
                 feed_dict = train_args[1]
                 feed_dict[x] = data_batch
                 feed_dict[y] = label_batch
