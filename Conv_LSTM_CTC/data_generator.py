@@ -21,7 +21,7 @@ class DataGenerator(object):
         self._bad_paths = []
         bad_file_records = ["bad_samples.txt", "silences"]
         for f in bad_file_records:
-            with open(os.join.path(data_dir, f)) as fp:  
+            with open(os.path.join(data_dir, f)) as fp:  
                 line = fp.readline()
                 while line:
                     self._bad_paths.append(line)
