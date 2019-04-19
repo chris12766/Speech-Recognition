@@ -18,18 +18,15 @@ class DataGenerator(object):
         self._test_data_dir = os.path.join(data_dir, "test")
         self._unknown_data_ratio = 1/6
         
-        '''
+        self._bad_paths = []
         bad_file_records = ["bad_samples.txt", "silences"]
         for f in bad_file_records:
             with open(os.join.path(data_dir, f)) as fp:  
                 line = fp.readline()
                 while line:
-                    bad_word_to_path
-                    
-                    
-                    
+                    self._bad_paths.append(line)
                     line = fp.readline()
-        '''
+        
         
         
         # Data params
@@ -206,12 +203,9 @@ class DataGenerator(object):
         # go over all WAV files in directory and sub-directories
         for wav_path in gfile.Glob(os.path.join(data_dir, '*', '*nohash*.wav')):
             # filter non-wav files
-            if not wav_path.endswith(".wav"):
+            if not wav_path.endswith(".wav") or wav_path in self._bad_paths:
                 continue
             curr_word = wav_path.split("/")[-2].lower()
-
-            print(wav_path)
-            sys.exit()
             
             # get encodings
             encoding = self._get_word_encoding(curr_word)
