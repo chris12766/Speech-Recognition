@@ -38,8 +38,7 @@ class DataGenerator(object):
                 count += 1
                 line = fp.readline()
                 if count % 2 == 0:
-                    self._batch.append(line)
-                    print("adding", line, "end")
+                    self._batch.append(''.join(c for c in line if c.isprintable()))
 
         
         
