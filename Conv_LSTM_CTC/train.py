@@ -93,10 +93,7 @@ def train_and_eval():
                 
                 
                 label_batch = label_batch[:,:4].astype('int32')
-                
-                print(label_batch)
-                print(label_batch.dtype)
-                
+
                 
                 feed_dict = train_args[1]
                 feed_dict[x] = data_batch
@@ -135,9 +132,13 @@ def evaluate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
     num_correct_preds = 0
     sum_edit_dist = 0
     
+    print("Validating...")
     while True:
         try:
             data_batch, label_batch = sess.run(next_batch_val)
+            
+            
+            label_batch = label_batch[:,:4].astype('int32')
             
             feed_dict = val_args[1]
             feed_dict[x] = data_batch

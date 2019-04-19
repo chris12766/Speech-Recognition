@@ -191,7 +191,7 @@ class DataGenerator(object):
             decoded_audios = []
             label_list = []
 
-            cnt = 1
+            
             for wav_path, label in known_data:
                 decoded_audios.append(self._decode_wav_file(wav_path))
                 
@@ -200,13 +200,7 @@ class DataGenerator(object):
                 new_label.append(wav_path)
                 
                 label_list.append(tuple(new_label))
-                cnt += 1
-                if cnt > 150:
-                    break
-            
-            
-            print(np.array(label_list))
-            print(np.array(label_list).dtype)
+
             
             
             self._data_lists.append(np.array(decoded_audios))
