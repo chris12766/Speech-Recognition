@@ -9,7 +9,7 @@ import os
 
 
 main_dir = "/scratch/chk1g16"              # PUTTY
-data_dir = os.path.join(main_dir, "speech_datasets")
+data_dir = os.path.join(main_dir, "speech_datasets_v1")
 
 # params
 batch_size = 128

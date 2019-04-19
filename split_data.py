@@ -4,13 +4,13 @@ import shutil
 
 
 # only change these 2
-downloads_dir = "C:\\Users\\chkar\\Downloads"
-extracted_folder = "speech_data"
+downloads_dir = "/scratch/chk1g16/"
+extracted_folder = "speech_data_v1"
 
 
 
 # do not change
-new_data_dir = os.path.join(downloads_dir, "speech_datasets")
+new_data_dir = os.path.join(downloads_dir, "speech_datasets_v1")
 original_data_dir = os.path.join(downloads_dir, extracted_folder)
 train_data_dir = os.path.join(new_data_dir, "train")
 val_data_dir = os.path.join(new_data_dir, "val")
