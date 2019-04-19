@@ -38,13 +38,16 @@ class DataGenerator(object):
                 count += 1
                 line = fp.readline()
                 if count % 2 == 0:
-                    self._batch.append(re.sub('[^a-zA-Z0-9\n\.]', '', line))
+                    self._batch.append(line)
+                    print("adding", line)
 
         
         
         
         for i in self._batch:
             print(i)
+        
+        sys.exit()
         
         # Data params
         self._bg_nsr = 0.5
