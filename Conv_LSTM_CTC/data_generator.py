@@ -196,7 +196,7 @@ class DataGenerator(object):
                 decoded_audios.append(self._decode_wav_file(wav_path))
                 label.append(wav_path)
                 label_list.append(tuple(label))
-                break
+                #break
             
             
             print(np.array(label_list))
