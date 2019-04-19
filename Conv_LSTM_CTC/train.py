@@ -92,10 +92,10 @@ def train_and_eval():
                 print()
                 
                 
-                label_batch = label_batch[:,:4]#.astype('int32')
+                label_batch = label_batch[:,:4].astype('int32')
                 
-                #print(label_batch)
-                #print(label_batch.dtype)
+                print(label_batch)
+                print(label_batch.dtype)
                 
                 #sys.exit()
                 
