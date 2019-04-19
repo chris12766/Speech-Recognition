@@ -239,6 +239,7 @@ class DataGenerator(object):
                 continue
                 
             if "train" in wav_path and not "/".join(wav_path.split("/")[-3:]) in self._batch:
+                print("no", "/".join(wav_path.split("/")[-3:]))
                 continue
             
             print("added", wav_path)
