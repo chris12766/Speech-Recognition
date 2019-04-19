@@ -242,7 +242,7 @@ class DataGenerator(object):
             
             print("added", wav_path)
             
-            if "train/on/5f8097e1_nohash_0.wav" in wav_path or "train/five/050170cb_nohash_0.wav" in wav_path:
+            if "train/on/5f8097e1_nohash_0.wav" in wav_path:# or "train/five/050170cb_nohash_0.wav" in wav_path:
                 continue
             
             curr_word = wav_path.split("/")[-2].lower()
