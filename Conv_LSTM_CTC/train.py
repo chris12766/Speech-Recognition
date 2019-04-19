@@ -97,7 +97,7 @@ def train_and_eval():
                 print(label_batch)
                 print(label_batch.dtype)
                 
-                #sys.exit()
+                sys.exit()
                 
                 feed_dict = train_args[1]
                 feed_dict[x] = data_batch
