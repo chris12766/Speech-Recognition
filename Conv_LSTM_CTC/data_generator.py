@@ -203,15 +203,9 @@ class DataGenerator(object):
         # go over all WAV files in directory and sub-directories
         for wav_path in gfile.Glob(os.path.join(data_dir, '*', '*nohash*.wav')):
             # filter non-wav files
-            if not wav_path.endswith(".wav") or "".join(wav_path.split("/")[-2:]) in self._bad_paths:
+            if not wav_path.endswith(".wav") or "/".join(wav_path.split("/")[-2:]) in self._bad_paths:
                 continue
             curr_word = wav_path.split("/")[-2].lower()
-            
-            
-            print("".join(wav_path.split("/")[-2:]))
-            print(self._bad_paths[0])
-            
-            sys.exit()
             
             
             # get encodings
