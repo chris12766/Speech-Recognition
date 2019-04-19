@@ -31,11 +31,13 @@ class DataGenerator(object):
         self._batch = []
         with open(os.path.join(data_dir, "batch.out")) as fp:  
             line = fp.readline()
+            count = 1
             while line:
-                self._bad_paths.append(line)
+                count += 1
                 line = fp.readline()
-                self._batch.append(line)
-                line = fp.readline()
+                if count % 2 == 0:
+                    self._batch.append(line)
+
         
         
         
