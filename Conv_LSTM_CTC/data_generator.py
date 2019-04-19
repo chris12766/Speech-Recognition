@@ -194,11 +194,12 @@ class DataGenerator(object):
                 decoded_audios.append(self._decode_wav_file(wav_path))
                 label.append(wav_path)
                 label_list.append(tuple(label))
-                break
+            
+            
             
             
             self._data_lists.append(np.array(decoded_audios))
-            self._labels_lists.append(np.array(label_list))#, dtype='i4, i4, i4, i4, S30'))
+            self._labels_lists.append(np.array(label_list))
         
         
         

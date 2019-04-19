@@ -87,15 +87,19 @@ def train_and_eval():
                 # (128, )    (128, 4)
                 data_batch, label_batch = sess.run(next_batch_train)
                 
-                feed_dict = train_args[1]
-                feed_dict[x] = data_batch
-                feed_dict[y] = label_batch
-                
                 print()
                 print(label_batch)
                 print()
                 
-                sys.exit()
+                
+                label_batch = label_batch[:,:4].astype('int32')
+                
+                feed_dict = train_args[1]
+                feed_dict[x] = data_batch
+                feed_dict[y] = label_batch
+                
+                
+                
                 
                 summary, global_step, loss, acc_greedy, edit_dist_greedy, \
                         acc_beam, edit_dist_beam, scores, _ = sess.run(train_args[0],
