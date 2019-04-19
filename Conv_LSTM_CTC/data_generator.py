@@ -25,13 +25,11 @@ class DataGenerator(object):
             with open(os.path.join(data_dir, f)) as fp:  
                 line = fp.readline()
                 while line:
-                    self._bad_paths.append(re.sub('[^a-zA-Z0-9\n\.]', '', line))
+                    self._bad_paths.append(line)
                     line = fp.readline()
         
         
-        
-        
-        
+
         self._batch = []
         with open(os.path.join(data_dir, "batch.out")) as fp:  
             line = fp.readline()
@@ -40,7 +38,7 @@ class DataGenerator(object):
                 count += 1
                 line = fp.readline()
                 if count % 2 == 0:
-                    self._batch.append(line)
+                    self._batch.append(re.sub('[^a-zA-Z0-9\n\.]', '', line))
 
         
         
