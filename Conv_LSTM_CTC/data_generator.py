@@ -253,6 +253,9 @@ class DataGenerator(object):
         print("Words missing from word_map.txt:", missing_words)
 
 
+        for i i n self._batch:
+            print(i)
+        
         # make silence waves (all zeros) and add samples equal to number of occurances of the most common word
         silence_dir = os.path.join(data_dir, self._silence_alias)
         if not os.path.exists(silence_dir):
