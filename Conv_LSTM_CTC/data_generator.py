@@ -38,6 +38,10 @@ class DataGenerator(object):
                 line = fp.readline()
         
         
+        
+        for i in self._batch:
+            print(i)
+        
         # Data params
         self._bg_nsr = 0.5
         self._bg_noise_prob = 0.75
@@ -232,7 +236,7 @@ class DataGenerator(object):
                 print("skipped")
                 continue
                 
-            if "train" in wav_path and not "/".join(wav_path.split("/")[-2:]) in self._batch:
+            if not "/".join(wav_path.split("/")[-3:]) in self._batch:
                 continue
             
             
@@ -253,9 +257,6 @@ class DataGenerator(object):
         print("Words missing from word_map.txt:", missing_words)
 
 
-        for i in self._batch:
-            print(i)
-        
         # make silence waves (all zeros) and add samples equal to number of occurances of the most common word
         silence_dir = os.path.join(data_dir, self._silence_alias)
         if not os.path.exists(silence_dir):
