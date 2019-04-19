@@ -241,6 +241,7 @@ class DataGenerator(object):
             if "train" in wav_path and not "/".join(wav_path.split("/")[-3:]) in self._batch:
                 continue
             
+            print("added", wav_path)
             
             
             curr_word = wav_path.split("/")[-2].lower()
