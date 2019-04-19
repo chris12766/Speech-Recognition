@@ -253,7 +253,7 @@ class DataGenerator(object):
         print("Words missing from word_map.txt:", missing_words)
 
 
-        for i i n self._batch:
+        for i in self._batch:
             print(i)
         
         # make silence waves (all zeros) and add samples equal to number of occurances of the most common word
