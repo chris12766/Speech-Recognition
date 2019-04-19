@@ -42,6 +42,11 @@ class DataGenerator(object):
 
         
         
+        print(len(self._batch))
+        print(len(self._batch))
+        print(len(self._batch))
+        print(len(self._batch))
+        
         # Data params
         self._bg_nsr = 0.5
         self._bg_noise_prob = 0.75
