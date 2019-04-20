@@ -41,11 +41,31 @@ class DataGenerator(object):
                     self._batch.append(''.join(c for c in line if c.isprintable()))
 
         
+        actual = []
+        with open(os.path.join(data_dir, "actual.out")) as fp:  
+            line = fp.readline()
+            count = 1
+            while line:
+                count += 1
+                line = fp.readline()
+                if count % 2 == 0:
+                    actual.append(''.join(c for c in line if c.isprintable()))
+
+        
+        
+        
+        print()
+        print()
+        print()
+        for i in self._batch:
+            if not i in actual:
+                print(i)
         
         print(len(self._batch))
-        print(len(self._batch))
-        print(len(self._batch))
-        print(len(self._batch))
+        print(len(actual))
+        
+        
+        sys.exit()
         
         # Data params
         self._bg_nsr = 0.5
