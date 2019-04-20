@@ -365,7 +365,7 @@ class DataGenerator(object):
     
     def _modify_PCM(self, pcm_sample):
         pcm_sample = pcm_sample[:18144]
-        pcm_sample.reshape([self._num_frames, 162])
+        pcm_sample = pcm_sample.reshape([self._num_frames, 162])
         return pcm_sample
     
     def _convert_to_log_mag_specs(self, data_batch):
