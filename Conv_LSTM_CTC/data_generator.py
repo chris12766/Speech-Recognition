@@ -57,15 +57,17 @@ class DataGenerator(object):
         print()
         print()
         print()
+        self._missing = []
         for i in self._batch:
             if not i in actual:
-                print(i)
+                missing.append(i)
+                print("missing:", i)
         
         print(len(self._batch))
         print(len(actual))
         
         
-        sys.exit()
+        
         
         # Data params
         self._bg_nsr = 0.5
@@ -269,6 +271,10 @@ class DataGenerator(object):
             
             #if "train/on/5f8097e1_nohash_0.wav" in wav_path:# or "train/five/050170cb_nohash_0.wav" in wav_path:
             #    continue
+            
+            for i in self._missing:
+                if i in wav_path:
+                    print("MISSING IS HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             
             curr_word = wav_path.split("/")[-2].lower()
             
