@@ -60,7 +60,7 @@ class DataGenerator(object):
         self._missing = []
         for i in self._batch:
             if not i in actual:
-                missing.append(i)
+                self._missing.append(i)
                 print("missing:", i)
         
         print(len(self._batch))
