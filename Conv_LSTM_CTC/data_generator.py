@@ -146,7 +146,7 @@ class DataGenerator(object):
             
             if input_type == 0:   # decoded wav (PCM)
                 print()
-                print(x.shape)
+                print(data[0].shape)
                 print()
                 
                 
