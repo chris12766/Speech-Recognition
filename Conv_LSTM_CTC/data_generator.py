@@ -38,7 +38,7 @@ class DataGenerator(object):
         
         self._padding_ms = 140
         self._audio_dur_in_ms = 1140
-        self._num_mel_spec_bins = 46
+        self._num_spec_bins = 46
         self._num_frames = 112
         self._audio_length = int(self._sampling_rate * self._audio_dur_in_ms / 1000) # 18,240
         self._frame_size = int(self._sampling_rate * self._frame_size_ms / 1000)     # 480
@@ -326,7 +326,7 @@ class DataGenerator(object):
 
         # warp the linear scale to mel scale
         # [num_mag_spec_bins, num_mel_spec_bins]
-        mel_weights = tf.contrib.signal.linear_to_mel_weight_matrix(self._num_mel_spec_bins,
+        mel_weights = tf.contrib.signal.linear_to_mel_weight_matrix(self._num_spec_bins,
                                                                     num_mag_spec_bins, 
                                                                     self._sampling_rate,
                                                                     lower_edge_hertz=20.0, 
@@ -337,7 +337,7 @@ class DataGenerator(object):
         mel_spectrograms = tf.tensordot(mag_spectrograms , mel_weights, 1)
         mel_spectrograms.set_shape([mag_spectrograms.shape[0], 
                                    mag_spectrograms.shape[1], 
-                                   self._num_mel_spec_bins])        
+                                   self._num_spec_bins])        
             
         # (batch_size, num_frames=112, num_mel_spec_bins=46)
         return mel_spectrograms
@@ -349,7 +349,8 @@ class DataGenerator(object):
                                                         frame_length=self._frame_size,
                                                         frame_step=self._frame_stride,
                                                         fft_length=self._frame_size))
-                                                        
+        
+        self._num_spec_bins = 1 + (self._frame_size // 2)
         return mag_spectrograms
         
     def _convert_to_mfcc(self, data_batch):

@@ -9,7 +9,7 @@ import multiprocessing
 
 
 
-model_input_type = 5
+model_input_type = 1
 
 
 # Training params
@@ -54,7 +54,7 @@ def train_and_eval():
 
     # Create train graph
     train_args, val_args, x, y = create_train_graph(data_gen._num_char_classes, data_gen._label_encoding_length,
-                                                    data_gen._num_frames, data_gen._num_mel_spec_bins, init_lr, lr_decay_steps, lr_decay_rate)
+                                                    data_gen._num_frames, data_gen._num_spec_bins, init_lr, lr_decay_steps, lr_decay_rate)
 
     # create savers
     saver = tf.train.Saver(tf.global_variables(), max_to_keep=100000)
