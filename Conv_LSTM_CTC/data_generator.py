@@ -139,10 +139,6 @@ class DataGenerator(object):
                 with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
                     data = np.asarray(list(executor.map(self._modify_PCM, data)))
             
-            
-            print(data.shape)
-            sys.exit()
-            
             # create datasets
             data_placeholder = tf.placeholder(data.dtype, data.shape, name=("data_placeholder_%d" % i))
             labels_placeholder = tf.placeholder(labels.dtype, labels.shape, name=("labels_placeholder_%d" % i))
@@ -364,9 +360,9 @@ class DataGenerator(object):
     
     
     def _modify_PCM(self, pcm_sample):
-        pcm_sample = pcm_sample[:18144]
-        pcm_sample = pcm_sample.reshape([self._num_frames, 162])
-        return pcm_sample
+        pcm_sample = pcm_sample[:self._audio_length]
+        self._num_spec_bins = self._audio_length // self._num_frames
+        return pcm_sample.reshape([self._num_frames, self._num_spec_bins])
     
     def _convert_to_log_mag_specs(self, data_batch):
         mag_specs = self._convert_to_mag_specs(data_batch)
