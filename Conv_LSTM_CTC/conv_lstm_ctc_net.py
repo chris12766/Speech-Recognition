@@ -106,7 +106,7 @@ def conv_net_part(input, batch_norm_train_mode):
     
 def conv_lstm_net(input, num_char_classes, dropout_keep_prob, batch_norm_train_mode):
     # conv part
-    # input: (batch_size=?, data_seq_len=12, 4, 256)
+    # input: (batch_size=?, 112, 46)
     # ouput: (batch_size=?, 12, 4, 256)
     conv_net_output = conv_net_part(input, batch_norm_train_mode)
 
@@ -222,7 +222,7 @@ def get_ctc_loss(logits, label_batch):
                                      preprocess_collapse_repeated=True, 
                                      time_major=False, 
                                      ctc_merge_repeated=True,
-                                     ignore_longer_outputs_than_inputs=False)
+                                     ignore_longer_outputs_than_inputs=True)
         loss = tf.reduce_mean(ctc_loss_op)
         
         

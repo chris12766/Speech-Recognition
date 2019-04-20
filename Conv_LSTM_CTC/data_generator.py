@@ -79,7 +79,7 @@ class DataGenerator(object):
         self._padding_ms = 140
         self._audio_dur_in_ms = 1140
         self._num_mel_spec_bins = 46
-        self._num_frames = 12
+        self._num_frames = 112
         self._audio_length = int(self._sampling_rate * self._audio_dur_in_ms / 1000) # 18,240
         self._frame_size = int(self._sampling_rate * self._frame_size_ms / 1000)     # 480
         self._frame_stride = int(self._sampling_rate * self._frame_stride_ms / 1000) # 160
