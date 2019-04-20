@@ -356,7 +356,7 @@ class DataGenerator(object):
         return tf.contrib.signal.mfccs_from_log_mel_spectrograms(self._convert_to_log_mel_specs(data_batch))
     
     
-    def _convert_to_mfcc(self, data_batch):
+    def _modify_PCM(self, data_batch):
         data_batch = data_batch[:18144]
         data_batch.set_shape([self._num_frames, 162])
         return data_batch
