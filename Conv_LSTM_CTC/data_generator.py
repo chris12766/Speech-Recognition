@@ -140,6 +140,9 @@ class DataGenerator(object):
                     data = np.asarray(list(executor.map(self._modify_PCM, data)))
             
             
+            print(data.shape)
+            sys.exit()
+            
             # create datasets
             data_placeholder = tf.placeholder(data.dtype, data.shape, name=("data_placeholder_%d" % i))
             labels_placeholder = tf.placeholder(labels.dtype, labels.shape, name=("labels_placeholder_%d" % i))
