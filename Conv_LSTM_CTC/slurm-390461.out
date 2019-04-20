@@ -1,0 +1,57 @@
+Running SLURM prolog script on pink57.cluster.local
+===============================================================================
+Job started on Sat Apr 20 21:11:56 BST 2019
+Job ID          : 390461
+Job name        : run_train.sh
+WorkDir         : /mainfs/lyceum/rt1g16/Speech-Recognition/Conv_LSTM_CTC
+Command         : /mainfs/lyceum/rt1g16/Speech-Recognition/Conv_LSTM_CTC/run_train.sh
+Partition       : lyceum
+Num hosts       : 1
+Num cores       : 2
+Num of tasks    : 1
+Hosts allocated : pink57
+Job Output Follows ...
+===============================================================================
+/tmp/slurmd/job390461/slurm_script: line 15: cd: /lyceum/chk1g16/Speech-Recognition/Conv_LSTM_CTC: Permission denied
+Words missing from the dataset: {'forward', 'tree', 'learn', 'backward', 'visual', 'follow'}
+Words missing from the dataset: {'forward', 'tree', 'learn', 'backward', 'visual', 'follow'}
+Traceback (most recent call last):
+  File "train.py", line 171, in <module>
+    train_and_eval()    
+  File "train.py", line 34, in train_and_eval
+    data_gen = DataGenerator(batch_size, data_dir, model_input_type)
+  File "/mainfs/lyceum/rt1g16/Speech-Recognition/Conv_LSTM_CTC/data_generator.py", line 152, in __init__
+    dataset = dataset.map(lambda x,y : (self._convert_to_log_mag_specs(x), y), num_parallel_calls=20)
+  File "/lyceum/rt1g16/.conda/envs/py3venv/lib/python3.6/site-packages/tensorflow/python/data/ops/dataset_ops.py", line 1040, in map
+    return ParallelMapDataset(self, map_func, num_parallel_calls)
+  File "/lyceum/rt1g16/.conda/envs/py3venv/lib/python3.6/site-packages/tensorflow/python/data/ops/dataset_ops.py", line 2649, in __init__
+    use_inter_op_parallelism)
+  File "/lyceum/rt1g16/.conda/envs/py3venv/lib/python3.6/site-packages/tensorflow/python/data/ops/dataset_ops.py", line 2611, in __init__
+    map_func, "Dataset.map()", input_dataset)
+  File "/lyceum/rt1g16/.conda/envs/py3venv/lib/python3.6/site-packages/tensorflow/python/data/ops/dataset_ops.py", line 1860, in __init__
+    self._function.add_to_graph(ops.get_default_graph())
+  File "/lyceum/rt1g16/.conda/envs/py3venv/lib/python3.6/site-packages/tensorflow/python/framework/function.py", line 479, in add_to_graph
+    self._create_definition_if_needed()
+  File "/lyceum/rt1g16/.conda/envs/py3venv/lib/python3.6/site-packages/tensorflow/python/framework/function.py", line 335, in _create_definition_if_needed
+    self._create_definition_if_needed_impl()
+  File "/lyceum/rt1g16/.conda/envs/py3venv/lib/python3.6/site-packages/tensorflow/python/framework/function.py", line 344, in _create_definition_if_needed_impl
+    self._capture_by_value, self._caller_device)
+  File "/lyceum/rt1g16/.conda/envs/py3venv/lib/python3.6/site-packages/tensorflow/python/framework/function.py", line 864, in func_graph_from_py_func
+    outputs = func(*func_graph.inputs)
+  File "/lyceum/rt1g16/.conda/envs/py3venv/lib/python3.6/site-packages/tensorflow/python/data/ops/dataset_ops.py", line 1794, in tf_data_structured_function_wrapper
+    ret = func(*nested_args)
+  File "/mainfs/lyceum/rt1g16/Speech-Recognition/Conv_LSTM_CTC/data_generator.py", line 152, in <lambda>
+    dataset = dataset.map(lambda x,y : (self._convert_to_log_mag_specs(x), y), num_parallel_calls=20)
+  File "/mainfs/lyceum/rt1g16/Speech-Recognition/Conv_LSTM_CTC/data_generator.py", line 359, in _convert_to_log_mag_specs
+    nperseg = int(round(window_size * sampling_rate / 1e3))
+NameError: name 'window_size' is not defined
+==============================================================================
+Running epilogue script on pink57.
+
+Submit time  : 2019-04-20T21:11:54
+Start time   : 2019-04-20T21:11:56
+End time     : 2019-04-20T21:13:03
+Elapsed time : 00:01:07 (Timelimit=2-00:00:00)
+
+Job Efficiency is: 0.00%
+
