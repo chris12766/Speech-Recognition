@@ -297,7 +297,7 @@ class DataGenerator(object):
     def _convert_to_log_mel_specs(self, data_batch):
         # takes a batch of mono PCM samples
         # input data_batch (batch_size, audio_length)
-        mel_spectrograms = self._convert_to_mel_spec(data_batch)     
+        mel_spectrograms = self._convert_to_mel_specs(data_batch)     
         
         v_max = tf.reduce_max(mel_spectrograms, axis=[1, 2], keepdims=True)
         v_min = tf.reduce_min(mel_spectrograms, axis=[1, 2], keepdims=True)
