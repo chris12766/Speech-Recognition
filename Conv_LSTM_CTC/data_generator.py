@@ -6,7 +6,6 @@ from tensorflow.python.framework import dtypes
 from tensorflow.python.platform import gfile
 import scipy.io.wavfile
 import concurrent.futures
-import librosa
 import re
 
 
