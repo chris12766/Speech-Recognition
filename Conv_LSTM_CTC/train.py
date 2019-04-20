@@ -10,7 +10,7 @@ import multiprocessing
 
 # Training params
 num_epochs = 1
-init_lr = 0.0002
+init_lr = 0.00001
 lr_decay_steps = 0.3
 lr_decay_rate = 3800
 saves_dir = os.path.join(main_dir, "speech_project_saves")
@@ -87,28 +87,22 @@ def train_and_eval():
                 # (128, )    (128, 4)
                 data_batch, label_batch = sess.run(next_batch_train)
                 
-                print()
-                print(label_batch)
-                print()
-                
-                
-                label_batch = label_batch[:,:4].astype('int32')
+                #label_batch = label_batch[:,:4].astype('int32')
 
                 
                 feed_dict = train_args[1]
                 feed_dict[x] = data_batch
                 feed_dict[y] = label_batch
                 
-                
-                
-                
                 summary, global_step, loss, acc_greedy, edit_dist_greedy, \
-                        acc_beam, edit_dist_beam, scores, _ = sess.run(train_args[0],
-                                                                       feed_dict=feed_dict)
+                        acc_beam, edit_dist_beam, scores, _, learn_rate, global_norm = sess.run(train_args[0],
+                                                                                                feed_dict=feed_dict)
                 train_writer.add_summary(summary, curr_step) 
                 
                 print('curr_step #%d, epoch #%d' %(curr_step, epoch))
                 print("Training stats: acc_greedy = %.2f, loss = %.4f" %(acc_greedy * 100, loss))
+                print("Learning rate:", learn_rate)
+                print("Global norm:", global_norm)
                 
                 
                 #  Run validation and save ckpt.
@@ -138,7 +132,7 @@ def evaluate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
             data_batch, label_batch = sess.run(next_batch_val)
             
             
-            label_batch = label_batch[:,:4].astype('int32')
+            #label_batch = label_batch[:,:4].astype('int32')
             
             feed_dict = val_args[1]
             feed_dict[x] = data_batch

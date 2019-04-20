@@ -311,7 +311,7 @@ def optimize_loss(loss, init_lr, lr_decay_steps, lr_decay_rate):
     tf.summary.scalar('learn_rate', learn_rate)
     tf.summary.scalar('global_norm', global_norm)
     
-    return train_op, global_step
+    return train_op, global_step, learn_rate, global_norm
 
 def create_train_graph(num_char_classes, label_encoding_length, num_frames, num_mel_spec_bins, init_lr, lr_decay_steps, lr_decay_rate):
     # batch placeholders
@@ -330,7 +330,7 @@ def create_train_graph(num_char_classes, label_encoding_length, num_frames, num_
     predictions, loss, acc_greedy, edit_dist_greedy, acc_beam, edit_dist_beam, scores = get_ctc_loss(logits, label_batch_plh)
 
     # optimizer
-    train_op, global_step = optimize_loss(loss, init_lr, lr_decay_steps, lr_decay_rate)
+    train_op, global_step, learn_rate, global_norm = optimize_loss(loss, init_lr, lr_decay_steps, lr_decay_rate)
 
     
     summaries = tf.summary.merge_all()
@@ -342,7 +342,7 @@ def create_train_graph(num_char_classes, label_encoding_length, num_frames, num_
                        batch_norm_train_mode: True}
     val_feed_dict = {batch_norm_train_mode: False}
     
-    return (ops_to_run + [train_op], train_feed_dict), (ops_to_run + [predictions], val_feed_dict), data_batch_plh, label_batch_plh
+    return (ops_to_run + [train_op, learn_rate, global_norm], train_feed_dict), (ops_to_run + [predictions], val_feed_dict), data_batch_plh, label_batch_plh
 
 
 '''
