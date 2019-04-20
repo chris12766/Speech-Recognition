@@ -29,7 +29,7 @@ class DataGenerator(object):
                     line = fp.readline()
         
         
-
+        '''
         self._batch = []
         with open(os.path.join(data_dir, "batch_1.out")) as fp:  
             line = fp.readline()
@@ -65,7 +65,7 @@ class DataGenerator(object):
         
         print(len(self._batch))
         print(len(actual))
-        
+        '''
         
         
         
@@ -224,9 +224,10 @@ class DataGenerator(object):
             
             wav_paths, label_list = zip(*known_data)
            
-            '''
+            
             with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-                decoded_audios = np.array(list(executor.map(self._decode_wav_file, wav_paths)))
+                decoded_audios = list(executor.map(self._decode_wav_file, wav_paths))
+            
             '''
             decoded_audios = []
             label_list = []
@@ -240,7 +241,7 @@ class DataGenerator(object):
                 new_label.append(wav_path)
                 
                 label_list.append(tuple(new_label))
-
+            '''
             
             
             self._data_lists.append(np.array(decoded_audios))
@@ -260,18 +261,19 @@ class DataGenerator(object):
         for wav_path in gfile.Glob(os.path.join(data_dir, '*', '*nohash*.wav')):
             # filter non-wav files
             if not wav_path.endswith(".wav") or "/".join(wav_path.split("/")[-2:]) in self._bad_paths:
-                print("skipped")
                 continue
-                
+            
+            
+            '''
             if "train" in wav_path and not "/".join(wav_path.split("/")[-3:]) in self._batch:
                 #print("no", "/".join(wav_path.split("/")[-3:]))
                 continue
             
             print("added", wav_path)
-            
+            '''
             #if "train/on/5f8097e1_nohash_0.wav" in wav_path:# or "train/five/050170cb_nohash_0.wav" in wav_path:
             #    continue
-            
+            '''
             for i in self._missing:
                 if i in wav_path:
                     print("MISSING:", i)
@@ -280,9 +282,10 @@ class DataGenerator(object):
                     encoding = self._get_word_encoding(curr_word)
                     known_data.append([wav_path, encoding])
                     known_data_word_occur[curr_word] += 1
+            '''
+            
             
             curr_word = wav_path.split("/")[-2].lower()
-            
             
             # get encodings
             encoding = self._get_word_encoding(curr_word)
@@ -294,7 +297,7 @@ class DataGenerator(object):
                     unknown_data.append([wav_path, encoding])
             else:
                 missing_words.add(curr_word)
-        print("Leftover words:", missing_words)
+        print("Words missing from the dataset:", missing_words)
 
 
         # make silence waves (all zeros) and add samples equal to number of occurances of the most common word
