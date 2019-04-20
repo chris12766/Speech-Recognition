@@ -145,6 +145,13 @@ class DataGenerator(object):
             
             
             if input_type == 0:   # decoded wav (PCM)
+                print()
+                print(x.shape)
+                print()
+                
+                
+                sys.exit()
+                
                 pass
             elif input_type == 1: # mag spectrogram
                 dataset = dataset.map(lambda x,y : (self._convert_to_mag_specs(x), y), num_parallel_calls=20)
