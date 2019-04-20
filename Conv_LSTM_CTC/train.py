@@ -10,9 +10,9 @@ import multiprocessing
 
 # Training params
 num_epochs = 1
-init_lr = 0.00001
-lr_decay_steps = 0.3
-lr_decay_rate = 3800
+init_lr = 0.0002
+lr_decay_steps = 3800
+lr_decay_rate = 0.3
 saves_dir = os.path.join(main_dir, "speech_project_saves")
 
 
