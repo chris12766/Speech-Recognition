@@ -138,6 +138,7 @@ class DataGenerator(object):
             if input_type == 0:   # decoded wav (PCM)
                 with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
                     data = np.asarray(list(executor.map(self._modify_PCM, data)))
+                    self._data_lists[i] = data
             
             # create datasets
             data_placeholder = tf.placeholder(data.dtype, data.shape, name=("data_placeholder_%d" % i))
