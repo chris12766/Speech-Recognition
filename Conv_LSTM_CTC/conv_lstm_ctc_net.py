@@ -222,7 +222,7 @@ def get_ctc_loss(logits, label_batch):
                                      preprocess_collapse_repeated=True, 
                                      time_major=False, 
                                      ctc_merge_repeated=True,
-                                     ignore_longer_outputs_than_inputs=True)
+                                     ignore_longer_outputs_than_inputs=False)
         loss = tf.reduce_mean(ctc_loss_op)
         
         
