@@ -145,18 +145,18 @@ class DataGenerator(object):
             dataset = dataset.batch(batch_size, drop_remainder=False)
             
             
-            if input_type == 0:   # decoded wav
-                dataset = dataset.map(lambda x,y : (self._convert_to_log_mel_spec(x), y), num_parallel_calls=20)
+            if input_type == 0:   # decoded wav (PCM)
+                dataset = dataset.map(lambda x,y : (self._convert_to_mag_specs(x), y), num_parallel_calls=20)
             elif input_type == 1: # log spectrogram
                 dataset = dataset.map(lambda x,y : (self._convert_to_log_mel_spec(x), y), num_parallel_calls=20)
             elif input_type == 2: # log spectrogram
                 dataset = dataset.map(lambda x,y : (self._convert_to_log_mel_spec(x), y), num_parallel_calls=20)
             elif input_type == 3: # mel spectrogram
-                dataset = dataset.map(lambda x,y : (self._convert_to_mel_spec(x), y), num_parallel_calls=20)
+                dataset = dataset.map(lambda x,y : (self._convert_to_mel_specs(x), y), num_parallel_calls=20)
             elif input_type == 4: # log mel spectrogram
-                dataset = dataset.map(lambda x,y : (self._convert_to_log_mel_spec(x), y), num_parallel_calls=20)
+                dataset = dataset.map(lambda x,y : (self._convert_to_log_mel_specs(x), y), num_parallel_calls=20)
             elif input_type == 5: # mfcc
-                dataset = dataset.map(lambda x,y : (self._convert_to_log_mel_spec(x), y), num_parallel_calls=20)               
+                dataset = dataset.map(lambda x,y : (self._convert_to_mfcc(x), y), num_parallel_calls=20)               
                 
                 
             self._datasets.append(dataset)
@@ -294,81 +294,68 @@ class DataGenerator(object):
         return label
         
         
-    def _convert_to_log_mel_spec(self, data_batch):
+    def _convert_to_log_mel_specs(self, data_batch):
         # takes a batch of mono PCM samples
         # input data_batch (batch_size, audio_length)
-        with tf.name_scope('audio_to_spec_conversion'):
-            # get magnitude spectrogram via the short-term Fourier transform
-            # (batch_size, num_frames,=112 num_mag_spec_bins)
-            mag_spectrogram = tf.abs(tf.contrib.signal.stft(data_batch,
-                                                            frame_length=self._frame_size,
-                                                            frame_step=self._frame_stride,
-                                                            fft_length=self._frame_size))
-            num_mag_spec_bins = 1 + (self._frame_size // 2)
+        mel_spectrograms = self._convert_to_mel_spec(data_batch)     
+        
+        v_max = tf.reduce_max(mel_spectrograms, axis=[1, 2], keepdims=True)
+        v_min = tf.reduce_min(mel_spectrograms, axis=[1, 2], keepdims=True)
+        is_zero = tf.cast(tf.equal(v_max - v_min, 0), tf.float32)
+        scaled_mel_specs = (mel_spectrograms - v_min) / (v_max - v_min + is_zero)
 
-            # warp the linear scale to mel scale
-            # [num_mag_spec_bins, num_mel_spec_bins]
-            mel_weights = tf.contrib.signal.linear_to_mel_weight_matrix(self._num_mel_spec_bins,
-                                                                        num_mag_spec_bins, 
-                                                                        self._sampling_rate,
-                                                                        lower_edge_hertz=20.0, 
-                                                                        upper_edge_hertz=4000.0)
-
-            # convert the magnitude spectrogram to mel spectrogram 
-            # (batch_size, num_frames, num_mel_spec_bins)
-            mel_spectrogram = tf.tensordot(mag_spectrogram , mel_weights, 1)
-            mel_spectrogram.set_shape([mag_spectrogram .shape[0], 
-                                       mag_spectrogram .shape[1], 
-                                       self._num_mel_spec_bins])        
-            
-                                      
-            v_max = tf.reduce_max(mel_spectrogram, axis=[1, 2], keepdims=True)
-            v_min = tf.reduce_min(mel_spectrogram, axis=[1, 2], keepdims=True)
-            is_zero = tf.cast(tf.equal(v_max - v_min, 0), tf.float32)
-            scaled_mel_spec = (mel_spectrogram - v_min) / (v_max - v_min + is_zero)
-
-            epsilon = 0.001
-            log_mel_spec = tf.log(scaled_mel_spec + epsilon)
-            v_min = np.log(epsilon)
-            v_max = np.log(epsilon + 1)
-            
-            scaled_log_mel_spec = (log_mel_spec - v_min) / (v_max - v_min)
+        epsilon = 0.001
+        log_mel_specs = tf.log(scaled_mel_specs + epsilon)
+        v_min = np.log(epsilon)
+        v_max = np.log(epsilon + 1)
+        
+        scaled_log_mel_specs = (log_mel_specs - v_min) / (v_max - v_min)
             
         # (batch_size, num_frames=112, num_mel_spec_bins=46)
-        return scaled_log_mel_spec
+        return scaled_log_mel_specs
     
     
-    def _convert_to_mel_spec(self, data_batch):
+    def _convert_to_mel_specs(self, data_batch):
         # takes a batch of mono PCM samples
         # input data_batch (batch_size, audio_length)
-        with tf.name_scope('audio_to_spec_conversion'):
-            # get magnitude spectrogram via the short-term Fourier transform
-            # (batch_size, num_frames,=112 num_mag_spec_bins)
-            mag_spectrogram = tf.abs(tf.contrib.signal.stft(data_batch,
-                                                            frame_length=self._frame_size,
-                                                            frame_step=self._frame_stride,
-                                                            fft_length=self._frame_size))
-            num_mag_spec_bins = 1 + (self._frame_size // 2)
 
-            # warp the linear scale to mel scale
-            # [num_mag_spec_bins, num_mel_spec_bins]
-            mel_weights = tf.contrib.signal.linear_to_mel_weight_matrix(self._num_mel_spec_bins,
-                                                                        num_mag_spec_bins, 
-                                                                        self._sampling_rate,
-                                                                        lower_edge_hertz=20.0, 
-                                                                        upper_edge_hertz=4000.0)
+        # get magnitude spectrograms via the short-term Fourier transform
+        # (batch_size, num_frames,=112 num_mag_spec_bins)
+        mag_spectrograms = self._convert_to_mag_specs(data_batch)
+        num_mag_spec_bins = 1 + (self._frame_size // 2)
 
-            # convert the magnitude spectrogram to mel spectrogram 
-            # (batch_size, num_frames, num_mel_spec_bins)
-            mel_spectrogram = tf.tensordot(mag_spectrogram , mel_weights, 1)
-            mel_spectrogram.set_shape([mag_spectrogram .shape[0], 
-                                       mag_spectrogram .shape[1], 
-                                       self._num_mel_spec_bins])        
+        # warp the linear scale to mel scale
+        # [num_mag_spec_bins, num_mel_spec_bins]
+        mel_weights = tf.contrib.signal.linear_to_mel_weight_matrix(self._num_mel_spec_bins,
+                                                                    num_mag_spec_bins, 
+                                                                    self._sampling_rate,
+                                                                    lower_edge_hertz=20.0, 
+                                                                    upper_edge_hertz=4000.0)
+
+        # convert the magnitude spectrograms to mel spectrograms 
+        # (batch_size, num_frames, num_mel_spec_bins)
+        mel_spectrograms = tf.tensordot(mag_spectrograms , mel_weights, 1)
+        mel_spectrograms.set_shape([mag_spectrograms.shape[0], 
+                                   mag_spectrograms.shape[1], 
+                                   self._num_mel_spec_bins])        
             
         # (batch_size, num_frames=112, num_mel_spec_bins=46)
-        return mel_spectrogram
+        return mel_spectrograms
     
-    def _convert_to_log_spec(self, decoded_audio, sampling_rate, window_size=20, step_size=10, eps=1e-10):
+    def _convert_to_mag_specs(self, data_batch):
+        # get magnitude spectrograms via the short-term Fourier transform
+        # (batch_size, num_frames,=112 num_mag_spec_bins)
+        mag_spectrograms = tf.abs(tf.contrib.signal.stft(data_batch,
+                                                        frame_length=self._frame_size,
+                                                        frame_step=self._frame_stride,
+                                                        fft_length=self._frame_size))
+                                                        
+        return mag_spectrograms
+        
+    def _convert_to_mfcc(self, data_batch):
+        return tf.signal.mfccs_from_log_mel_spectrograms(self._convert_to_log_mel_specs(data_batch))
+    
+    def _convert_to_log_specs(self, decoded_audio, sampling_rate, window_size=20, step_size=10, eps=1e-10):
         nperseg = int(round(window_size * sampling_rate / 1e3))
         noverlap = int(round(step_size * sampling_rate / 1e3))
         
@@ -386,15 +373,3 @@ class DataGenerator(object):
         log_spec = (log_spec - mean) / std
         
         return freqs, times, log_spec
-        
-        
-    def _convert_to_mfcc(self, decoded_audio, sampling_rate):
-        mel_spec = librosa.feature.melspectrogram(decoded_audio, sr=sampling_rate, n_mels=128)
-        log_mel_spec = librosa.power_to_db(mel_spec, ref=np.max)
-        
-        mfcc = librosa.feature.mfcc(S=log_mel_spec, n_mfcc=13)
-        # pad on the first and second deltas
-        delta2_mfcc = librosa.feature.delta(mfcc, order=2)
-        
-        return delta2_mfcc
-         
