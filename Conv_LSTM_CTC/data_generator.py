@@ -137,7 +137,7 @@ class DataGenerator(object):
             
             if input_type == 0:   # decoded wav (PCM)
                 with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-                    data = executor.map(self._modify_PCM, data)
+                    data = np.asarray(list(executor.map(self._modify_PCM, data)))
             
             
             # create datasets
