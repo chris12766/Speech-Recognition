@@ -360,8 +360,8 @@ class DataGenerator(object):
     
     
     def _modify_PCM(self, pcm_sample):
-        pcm_sample = pcm_sample[:self._audio_length]
         self._num_spec_bins = self._audio_length // self._num_frames
+        pcm_sample = pcm_sample[:self._num_spec_bins * self._num_frames]
         return pcm_sample.reshape([self._num_frames, self._num_spec_bins])
     
     def _convert_to_log_mag_specs(self, data_batch):
