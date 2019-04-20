@@ -90,7 +90,7 @@ class DataGenerator(object):
         self._silence_alias = "9"
         self._unknown_label = "unknown"
         self._silence_length = 16000
-        self._label_encoding_length = 16  
+        self._label_encoding_length = 4 
         
         # the first _num_known_words are known
         self._num_known_words = 10

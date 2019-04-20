@@ -109,7 +109,7 @@ def conv_lstm_net(input, num_char_classes, dropout_keep_prob, batch_norm_train_m
     # input: (batch_size=?, 112, 46)
     # ouput: (batch_size=?, 12, 4, 256)
     conv_net_output = conv_net_part(input, batch_norm_train_mode)
-
+    conv_net_output = tf.reshape(conv_net_output, [-1, 16, 3, 256])
 
     # rnn part
     with tf.name_scope('lstm_net_part'):
