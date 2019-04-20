@@ -276,7 +276,10 @@ class DataGenerator(object):
                 if i in wav_path:
                     print("MISSING:", i)
                     print("missing whole path:", wav_path)
-                    
+                    curr_word = wav_path.split("/")[-2].lower()
+                    encoding = self._get_word_encoding(curr_word)
+                    known_data.append([wav_path, encoding])
+                    known_data_word_occur[curr_word] += 1
             
             curr_word = wav_path.split("/")[-2].lower()
             
@@ -291,7 +294,7 @@ class DataGenerator(object):
                     unknown_data.append([wav_path, encoding])
             else:
                 missing_words.add(curr_word)
-        print("Words missing from word_map.txt:", missing_words)
+        print("Leftover words:", missing_words)
 
 
         # make silence waves (all zeros) and add samples equal to number of occurances of the most common word
@@ -299,7 +302,7 @@ class DataGenerator(object):
         if not os.path.exists(silence_dir):
             os.makedirs(silence_dir)
         
-        silence_file_path = os.path.join(silence_dir, "silence.wav")#.replace("/", "\\")            # remove replace in linux
+        silence_file_path = os.path.join(silence_dir, "silence.wav")
         silence_encoded = np.zeros([self._silence_length], dtype=np.int16)
         scipy.io.wavfile.write(silence_file_path, 16000, silence_encoded)
         
