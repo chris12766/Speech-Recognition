@@ -353,7 +353,7 @@ class DataGenerator(object):
         return mag_spectrograms
         
     def _convert_to_mfcc(self, data_batch):
-        return tf.signal.mfccs_from_log_mel_spectrograms(self._convert_to_log_mel_specs(data_batch))
+        return tf.contrib.signal.mfccs_from_log_mel_spectrograms(self._convert_to_log_mel_specs(data_batch))
     
     def _convert_to_log_specs(self, decoded_audio, sampling_rate, window_size=20, step_size=10, eps=1e-10):
         nperseg = int(round(window_size * sampling_rate / 1e3))
