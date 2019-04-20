@@ -7,14 +7,12 @@ import os
 
 #main_dir = "C:\\Users\\chkar\\Desktop"   # LOCAL
 
-
 main_dir = "/scratch/chk1g16"              # PUTTY
 data_dir = os.path.join(main_dir, "speech_datasets")
 
 # params
 batch_size = 128
 dropout_keep_prob_train = 0.5
-# num_batches/lr_decay_rate = 2.3
 
 
 def conv2d_batch_norm_relu(input, kernel_shape, training, padding='SAME', relu=True):
@@ -109,7 +107,6 @@ def conv_lstm_net(input, num_char_classes, dropout_keep_prob, batch_norm_train_m
     # input: (batch_size=?, 112, 46)
     # ouput: (batch_size=?, 12, 4, 256)
     conv_net_output = conv_net_part(input, batch_norm_train_mode)
-    conv_net_output = tf.reshape(conv_net_output, [-1, 16, 3, 256])
 
     # rnn part
     with tf.name_scope('lstm_net_part'):
@@ -170,7 +167,7 @@ def conv_lstm_net(input, num_char_classes, dropout_keep_prob, batch_norm_train_m
         if dropout_keep_prob != 1:
             fc_net = tf.nn.dropout(lstm_net_output, keep_prob=dropout_keep_prob)
         
-        # use batch_norm instead of biases                                                                  # USE XAVIER INIT FOR ALL KERNELS!!!!!
+        # use batch_norm instead of biases                                                                  
         # also use leaky_relu
         fc_net = tf.contrib.layers.fully_connected(fc_net,
                             num_outputs=160,

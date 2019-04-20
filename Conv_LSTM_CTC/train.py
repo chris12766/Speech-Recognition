@@ -8,15 +8,17 @@ import scipy.io.wavfile
 import multiprocessing
 
 
+
+model_input_type = 4
+
+
 # Training params
-num_epochs = 1
+num_epochs = 50
 init_lr = 0.0002
 lr_decay_steps = 3800
 lr_decay_rate = 0.3
-saves_dir = os.path.join(main_dir, "speech_project_saves")
 
-
-
+saves_dir = os.path.join(main_dir, "speech_project_saves_%d" % model_input_type)
 if not os.path.isdir(saves_dir):
     os.mkdir(saves_dir)
 log_dir = os.path.join(saves_dir, "logs")
@@ -26,10 +28,10 @@ ckpt_dir = os.path.join(saves_dir, "ckpts")
 if not os.path.isdir(ckpt_dir):
     os.mkdir(ckpt_dir)
     
-
+    
 def train_and_eval():    
     # Data input pipeline
-    data_gen = DataGenerator(batch_size, data_dir)
+    data_gen = DataGenerator(batch_size, data_dir, model_input_type)
     datasets = data_gen._get_datasets()
     
     train_dataset = datasets[0]
@@ -57,7 +59,7 @@ def train_and_eval():
     # create savers
     saver = tf.train.Saver(tf.global_variables(), max_to_keep=100000)
     train_writer = tf.summary.FileWriter(os.path.join(log_dir, "train"), sess.graph)
-    valid_writer = tf.summary.FileWriter(os.path.join(log_dir, "validation"), sess.graph)
+    valid_writer = tf.summary.FileWriter(os.path.join(log_dir, "val"), sess.graph)
 
     # Load previous model version
     curr_step = 1
@@ -87,9 +89,6 @@ def train_and_eval():
                 # (128, )    (128, 4)
                 data_batch, label_batch = sess.run(next_batch_train)
                 
-                #label_batch = label_batch[:,:4].astype('int32')
-
-                
                 feed_dict = train_args[1]
                 feed_dict[x] = data_batch
                 feed_dict[y] = label_batch
@@ -104,17 +103,18 @@ def train_and_eval():
                 print("Learning rate:", learn_rate)
                 print("Global norm:", global_norm)
                 
+                if curr_step % 100 == 0 or curr_step == 1 or epoch == num_epochs:
+                    # Run validation every 100 steps
+                    evaluate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_val, len(labels_lists[1]), data_gen)
+                    if curr_step != 1:
+                        print("Saving in", ckpt_dir)
+                        saver.save(sess, ckpt_dir, global_step=curr_step)
                 
-                #  Run validation and save ckpt.
-                evaluate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_val, len(labels_lists[1]), data_gen)
+                
                 curr_step += 1
             except tf.errors.OutOfRangeError:
                 print()
                 break
-        
-        # save after each epoch
-        print("Saving in", ckpt_dir)
-        saver.save(sess, ckpt_dir, global_step=curr_step)
   
     sess.close()
 
@@ -131,9 +131,6 @@ def evaluate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
         try:
             data_batch, label_batch = sess.run(next_batch_val)
             
-            
-            #label_batch = label_batch[:,:4].astype('int32')
-            
             feed_dict = val_args[1]
             feed_dict[x] = data_batch
             feed_dict[y] = label_batch
@@ -141,7 +138,7 @@ def evaluate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
             summary, global_step, loss, acc_greedy, edit_dist_greedy, \
                         acc_beam, edit_dist_beam, scores, predictions = sess.run(val_args[0],
                                                                                  feed_dict=val_args[1])
-            valid_writer.add_summary(summary, global_step)
+            valid_writer.add_summary(summary, curr_step)
 
             
             sum_acc_beam += acc_beam

@@ -13,7 +13,7 @@ import re
 
 class DataGenerator(object):
 
-    def __init__(self, batch_size, data_dir):
+    def __init__(self, batch_size, data_dir, input_type):
         self._train_data_dir = os.path.join(data_dir, "train")
         self._val_data_dir = os.path.join(data_dir, "val")
         self._test_data_dir = os.path.join(data_dir, "test")
@@ -29,53 +29,13 @@ class DataGenerator(object):
                     line = fp.readline()
         
         
-        '''
-        self._batch = []
-        with open(os.path.join(data_dir, "batch_1.out")) as fp:  
-            line = fp.readline()
-            count = 1
-            while line:
-                count += 1
-                line = fp.readline()
-                if count % 2 == 0:
-                    self._batch.append(''.join(c for c in line if c.isprintable()))
-
-        
-        actual = []
-        with open(os.path.join(data_dir, "actual.out")) as fp:  
-            line = fp.readline()
-            count = 1
-            while line:
-                count += 1
-                line = fp.readline()
-                if count % 2 == 0:
-                    actual.append(''.join(c for c in line if c.isprintable()))
-
-        
-        
-        
-        print()
-        print()
-        print()
-        self._missing = []
-        for i in self._batch:
-            if not i in actual:
-                self._missing.append(i)
-                print("missing:", i)
-        
-        print(len(self._batch))
-        print(len(actual))
-        '''
-        
-        
-        
         # Data params
         self._bg_nsr = 0.5
         self._bg_noise_prob = 0.75
         self._sampling_rate = 16000
         self._frame_size_ms = 30.0
         self._frame_stride_ms = 10.0
-        #fg_interp_factor = audio_dur_in_ms/(audio_dur_in_ms-padding_ms
+        
         self._padding_ms = 140
         self._audio_dur_in_ms = 1140
         self._num_mel_spec_bins = 46
@@ -184,8 +144,21 @@ class DataGenerator(object):
             # use the whole dataset, model does not rely on equal sized batches
             dataset = dataset.batch(batch_size, drop_remainder=False)
             
-            dataset = dataset.map(lambda x,y : (self._convert_to_log_mel_spec(x), y), num_parallel_calls=10)
             
+            if input_type == 0:   # decoded wav
+                dataset = dataset.map(lambda x,y : (self._convert_to_log_mel_spec(x), y), num_parallel_calls=20)
+            elif input_type == 1: # log spectrogram
+                dataset = dataset.map(lambda x,y : (self._convert_to_log_mel_spec(x), y), num_parallel_calls=20)
+            elif input_type == 2: # log spectrogram
+                dataset = dataset.map(lambda x,y : (self._convert_to_log_mel_spec(x), y), num_parallel_calls=20)
+            elif input_type == 3: # mel spectrogram
+                dataset = dataset.map(lambda x,y : (self._convert_to_log_mel_spec(x), y), num_parallel_calls=20)
+            elif input_type == 4: # log mel spectrogram
+                dataset = dataset.map(lambda x,y : (self._convert_to_log_mel_spec(x), y), num_parallel_calls=20)
+            elif input_type == 5: # mfcc
+                dataset = dataset.map(lambda x,y : (self._convert_to_log_mel_spec(x), y), num_parallel_calls=20)               
+                
+                
             self._datasets.append(dataset)
         
         
@@ -228,19 +201,6 @@ class DataGenerator(object):
             with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
                 decoded_audios = list(executor.map(self._decode_wav_file, wav_paths))
             
-            '''
-            decoded_audios = []
-            label_list = []
-            for wav_path, label in known_data:
-                decoded_audios.append(self._decode_wav_file(wav_path))
-                
-                new_label = []
-                new_label.extend(label)
-                new_label.append(wav_path)
-                
-                label_list.append(tuple(new_label))
-            '''
-            
             
             self._data_lists.append(np.array(decoded_audios))
             self._labels_lists.append(np.array(label_list))
@@ -260,28 +220,6 @@ class DataGenerator(object):
             # filter non-wav files
             if not wav_path.endswith(".wav") or "/".join(wav_path.split("/")[-2:]) in self._bad_paths:
                 continue
-            
-            
-            '''
-            if "train" in wav_path and not "/".join(wav_path.split("/")[-3:]) in self._batch:
-                #print("no", "/".join(wav_path.split("/")[-3:]))
-                continue
-            
-            print("added", wav_path)
-            '''
-            #if "train/on/5f8097e1_nohash_0.wav" in wav_path:# or "train/five/050170cb_nohash_0.wav" in wav_path:
-            #    continue
-            '''
-            for i in self._missing:
-                if i in wav_path:
-                    print("MISSING:", i)
-                    print("missing whole path:", wav_path)
-                    curr_word = wav_path.split("/")[-2].lower()
-                    encoding = self._get_word_encoding(curr_word)
-                    known_data.append([wav_path, encoding])
-                    known_data_word_occur[curr_word] += 1
-            '''
-            
             
             curr_word = wav_path.split("/")[-2].lower()
             
@@ -398,6 +336,7 @@ class DataGenerator(object):
             
         # (batch_size, num_frames=112, num_mel_spec_bins=46)
         return scaled_log_mel_spec
+    
     
     def _convert_to_log_spec(self, decoded_audio, sampling_rate, window_size=20, step_size=10, eps=1e-10):
         nperseg = int(round(window_size * sampling_rate / 1e3))
