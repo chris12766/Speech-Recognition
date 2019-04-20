@@ -356,20 +356,19 @@ class DataGenerator(object):
         return tf.contrib.signal.mfccs_from_log_mel_spectrograms(self._convert_to_log_mel_specs(data_batch))
     
     def _convert_to_log_mag_specs(self, data_batch):
-        nperseg = int(round(window_size * sampling_rate / 1e3))
-        noverlap = int(round(step_size * sampling_rate / 1e3))
-        
-        freqs, times, spec = signal.spectrogram(decoded_audio,
-                                                fs=sampling_rate,
-                                                window='hann',
-                                                nperseg=nperseg,
-                                                noverlap=noverlap,
-                                                detrend=False)
-        log_spec = np.log(spec.T.astype(np.float32) + eps)
+        mag_specs = self._convert_to_mag_specs(data_batch)
 
-        # normalize
-        mean = np.mean(log_spec, axis=0)
-        std = np.std(log_spec, axis=0)
-        log_spec = (log_spec - mean) / std
-        
-        return log_mag_specs
+        v_max = tf.reduce_max(mag_specs, axis=[1, 2], keepdims=True)
+        v_min = tf.reduce_min(mag_specs, axis=[1, 2], keepdims=True)
+        is_zero = tf.cast(tf.equal(v_max - v_min, 0), tf.float32)
+        scaled_mel_specs = (mag_specs - v_min) / (v_max - v_min + is_zero)
+
+        epsilon = 0.001
+        log_mag_specs = tf.log(scaled_mel_specs + epsilon)
+        v_min = np.log(epsilon)
+        v_max = np.log(epsilon + 1)
+
+        scaled_log_mag_specs = (log_mag_specs - v_min) / (v_max - v_min)
+            
+        # (batch_size, num_frames=112, num_mel_spec_bins=46)
+        return scaled_log_mag_specs

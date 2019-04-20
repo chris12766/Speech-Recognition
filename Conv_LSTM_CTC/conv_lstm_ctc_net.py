@@ -7,7 +7,7 @@ import os
 
 #main_dir = "C:\\Users\\chkar\\Desktop"   # LOCAL
 
-main_dir = "/scratch/chk1g16"              # PUTTY
+main_dir = "/scratch/rt1g16"              # PUTTY
 data_dir = os.path.join(main_dir, "speech_datasets")
 
 # params
