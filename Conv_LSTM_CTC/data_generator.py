@@ -145,14 +145,7 @@ class DataGenerator(object):
             
             
             if input_type == 0:   # decoded wav (PCM)
-                print()
-                print(data[0].shape)
-                print()
-                
-                
-                sys.exit()
-                
-                pass
+                dataset = dataset.map(lambda x,y : (self._modify_PCM(x), y), num_parallel_calls=20)
             elif input_type == 1: # mag spectrogram
                 dataset = dataset.map(lambda x,y : (self._convert_to_mag_specs(x), y), num_parallel_calls=20)
             elif input_type == 2: # log mag spectrogram
@@ -361,6 +354,12 @@ class DataGenerator(object):
         
     def _convert_to_mfcc(self, data_batch):
         return tf.contrib.signal.mfccs_from_log_mel_spectrograms(self._convert_to_log_mel_specs(data_batch))
+    
+    
+    def _convert_to_mfcc(self, data_batch):
+        data_batch = data_batch[:18144]
+        data_batch.set_shape([self._num_frames, 162])
+        return data_batch
     
     def _convert_to_log_mag_specs(self, data_batch):
         mag_specs = self._convert_to_mag_specs(data_batch)
