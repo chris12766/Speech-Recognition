@@ -224,7 +224,7 @@ class DataGenerator(object):
             
             wav_paths, label_list = zip(*known_data)
            
-            '''
+            
             with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
                 decoded_audios = list(executor.map(self._decode_wav_file, wav_paths))
             
@@ -241,7 +241,7 @@ class DataGenerator(object):
                 new_label.append(wav_path)
                 
                 label_list.append(tuple(new_label))
-            
+            '''
             
             
             self._data_lists.append(np.array(decoded_audios))
