@@ -213,13 +213,13 @@ class DataGenerator(object):
         self._labels_lists = []
     
         for dir in dir_list:
-            known_data, unknown_data_data = self._load_data_from_dir(self._train_data_dir)
-            # shuffle unknown_data_data samples and take only a percentage of them
-            np.random.shuffle(unknown_data_data)
-            unknown_data_data = unknown_data_data[:int(len(known_data) * self._unknown_data_ratio)]
+            known_data, unknown_data = self._load_data_from_dir(self._train_data_dir)
+            # shuffle unknown_data samples and take only a percentage of them
+            np.random.shuffle(unknown_data)
+            unknown_data = unknown_data[:int(len(known_data) * self._unknown_data_ratio)]
             
             # known_data is now the whole dataset
-            known_data.extend(unknown_data_data)
+            known_data.extend(unknown_data)
             np.random.shuffle(known_data)
             
             wav_paths, label_list = zip(*known_data)
@@ -250,7 +250,7 @@ class DataGenerator(object):
         
     def _load_data_from_dir(self, data_dir):
         known_data = []
-        unknown_data_data = []
+        unknown_data = []
         missing_words = set()
         
         # to find the most common known_data word
@@ -276,8 +276,7 @@ class DataGenerator(object):
                 if i in wav_path:
                     print("MISSING:", i)
                     print("missing whole path:", wav_path)
-                    if wav_path.split("/")[-2].lower() in self._known_words:
-                        print(":missing word is known:")
+                    
             
             curr_word = wav_path.split("/")[-2].lower()
             
@@ -289,7 +288,7 @@ class DataGenerator(object):
                     known_data.append([wav_path, encoding])
                     known_data_word_occur[curr_word] += 1
                 else:
-                    unknown_data_data.append([wav_path, encoding])
+                    unknown_data.append([wav_path, encoding])
             else:
                 missing_words.add(curr_word)
         print("Words missing from word_map.txt:", missing_words)
@@ -308,7 +307,7 @@ class DataGenerator(object):
         most_num_occurs = known_data_word_occur.most_common(1)[0][1]
         known_data.extend([[silence_file_path, silence_encoding]] * most_num_occurs)
 
-        return known_data, unknown_data_data
+        return known_data, unknown_data
         
      
 
