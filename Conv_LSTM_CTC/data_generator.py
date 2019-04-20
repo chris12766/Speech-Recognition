@@ -146,11 +146,11 @@ class DataGenerator(object):
             
             
             if input_type == 0:   # decoded wav (PCM)
+                pass
+            elif input_type == 1: # mag spectrogram
                 dataset = dataset.map(lambda x,y : (self._convert_to_mag_specs(x), y), num_parallel_calls=20)
-            elif input_type == 1: # log spectrogram
-                dataset = dataset.map(lambda x,y : (self._convert_to_log_mel_spec(x), y), num_parallel_calls=20)
-            elif input_type == 2: # log spectrogram
-                dataset = dataset.map(lambda x,y : (self._convert_to_log_mel_spec(x), y), num_parallel_calls=20)
+            elif input_type == 2: # log mag spectrogram
+                dataset = dataset.map(lambda x,y : (self._convert_to_log_mag_specs(x), y), num_parallel_calls=20)
             elif input_type == 3: # mel spectrogram
                 dataset = dataset.map(lambda x,y : (self._convert_to_mel_specs(x), y), num_parallel_calls=20)
             elif input_type == 4: # log mel spectrogram
@@ -355,7 +355,7 @@ class DataGenerator(object):
     def _convert_to_mfcc(self, data_batch):
         return tf.contrib.signal.mfccs_from_log_mel_spectrograms(self._convert_to_log_mel_specs(data_batch))
     
-    def _convert_to_log_specs(self, decoded_audio, sampling_rate, window_size=20, step_size=10, eps=1e-10):
+    def _convert_to_log_mag_specs(self, data_batch):
         nperseg = int(round(window_size * sampling_rate / 1e3))
         noverlap = int(round(step_size * sampling_rate / 1e3))
         
@@ -372,4 +372,4 @@ class DataGenerator(object):
         std = np.std(log_spec, axis=0)
         log_spec = (log_spec - mean) / std
         
-        return freqs, times, log_spec
+        return log_mag_specs
