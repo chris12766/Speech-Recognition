@@ -134,6 +134,12 @@ class DataGenerator(object):
         for i in range(len(self._data_lists)):
             labels = self._labels_lists[i]
             data = self._data_lists[i]
+            
+            if input_type == 0:   # decoded wav (PCM)
+                with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+                    data = list(executor.map(self._modify_PCM, data))
+            
+            
             # create datasets
             data_placeholder = tf.placeholder(data.dtype, data.shape, name=("data_placeholder_%d" % i))
             labels_placeholder = tf.placeholder(labels.dtype, labels.shape, name=("labels_placeholder_%d" % i))
@@ -144,9 +150,7 @@ class DataGenerator(object):
             dataset = dataset.batch(batch_size, drop_remainder=False)
             
             
-            if input_type == 0:   # decoded wav (PCM)
-                dataset = dataset.map(lambda x,y : (self._modify_PCM(x), y), num_parallel_calls=20)
-            elif input_type == 1: # mag spectrogram
+            if input_type == 1: # mag spectrogram
                 dataset = dataset.map(lambda x,y : (self._convert_to_mag_specs(x), y), num_parallel_calls=20)
             elif input_type == 2: # log mag spectrogram
                 dataset = dataset.map(lambda x,y : (self._convert_to_log_mag_specs(x), y), num_parallel_calls=20)
@@ -356,10 +360,10 @@ class DataGenerator(object):
         return tf.contrib.signal.mfccs_from_log_mel_spectrograms(self._convert_to_log_mel_specs(data_batch))
     
     
-    def _modify_PCM(self, data_batch):
-        data_batch = data_batch[:18144]
-        data_batch.set_shape([self._num_frames, 162])
-        return data_batch
+    def _modify_PCM(self, pcm_sample):
+        pcm_sample = pcm_sample[:18144]
+        pcm_sample.set_shape([self._num_frames, 162])
+        return pcm_sample
     
     def _convert_to_log_mag_specs(self, data_batch):
         mag_specs = self._convert_to_mag_specs(data_batch)
