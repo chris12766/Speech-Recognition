@@ -274,7 +274,10 @@ class DataGenerator(object):
             
             for i in self._missing:
                 if i in wav_path:
-                    print("MISSING IS HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    print("MISSING:", i)
+                    print("missing whole path:", wav_path)
+                    if wav_path.split("/")[-2].lower() in self._known_words:
+                        print(":missing word is known:")
             
             curr_word = wav_path.split("/")[-2].lower()
             
