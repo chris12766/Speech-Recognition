@@ -28,10 +28,8 @@ if not os.path.isdir(log_dir):
 ckpt_dir = os.path.join(saves_dir, "ckpts_%d" % model_input_type)
 if not os.path.isdir(ckpt_dir):
     os.mkdir(ckpt_dir)
-checkpoint_prefix = os.path.join(ckpt_dir, "Speech_%d.ckpt" % model_input_type)
     
     
-best_val_accuracy = 0.0
 def train_and_val():    
     # Data input pipeline
     data_gen = DataGenerator(batch_size, data_dir, model_input_type)
@@ -70,7 +68,9 @@ def train_and_val():
     if model_checkpoint:
         print("Restoring from", model_checkpoint)
         saver.restore(sess=sess, save_path=model_checkpoint)
-        curr_step += int(model_checkpoint.split("-")[-1])
+        filename_parts = model_checkpoint.split("-")
+        curr_step += int(filename_parts[-1])
+        best_val_accuracy = float(filename_parts[0].split("_")[-1])
     else:
         init_op = tf.global_variables_initializer()
         sess.run(init_op)
@@ -109,9 +109,10 @@ def train_and_val():
                     accuracy = validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_val,
                                         len(labels_lists[1]), data_gen, val_iter_init_op, val_data_batch_plh, 
                                         val_label_batch_plh, data_lists, labels_lists)
-                    if curr_step != 1 and best_val_accuracy < accuracy:
+                    if best_val_accuracy < accuracy:
                         best_val_accuracy = accuracy
-                        print("Saving in", ckpt_dir)
+                        checkpoint_prefix = os.path.join(ckpt_dir, "speech_input_%d_acc_%.5f" % (model_input_type, best_val_accuracy))
+                        print("Saving in", checkpoint_prefix)
                         saver.save(sess, checkpoint_prefix, global_step=curr_step)
                 
                 curr_step += 1
