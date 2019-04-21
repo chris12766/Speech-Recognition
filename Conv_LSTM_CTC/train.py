@@ -9,17 +9,17 @@ import multiprocessing
 
 
 
-model_input_type = 5
+model_input_type = 0
 
 
 # Training params
 num_epochs = 100
 init_lr = 0.0002
-lr_decay_steps = 3800
-lr_decay_rate = 0.3
+lr_decay_steps = 10000
+lr_decay_rate = 0.1
 
 
-saves_dir = os.path.join(main_dir, "speech_project_saves_%d" % model_input_type)
+saves_dir = os.path.join(main_dir, "speech_project_saves_%d_lrdec_10000" % model_input_type)
 if not os.path.isdir(saves_dir):
     os.mkdir(saves_dir)
 log_dir = os.path.join(saves_dir, "logs_%d" % model_input_type)
