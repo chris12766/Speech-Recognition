@@ -9,7 +9,7 @@ import multiprocessing
 
 
 
-model_input_type = 0
+model_input_type = 4
 
 
 # Training params
