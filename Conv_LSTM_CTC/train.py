@@ -168,7 +168,7 @@ def validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
     
     # record accuracy of the model trained so far
     accuracy = (num_correct_preds / val_dataset_size)
-    valid_writer.add_summary(tf.summary.scalar('accuracy', accuracy), curr_step)
+    valid_writer.add_summary(sess.run(tf.summary.scalar('accuracy', accuracy)), curr_step)
     
     # calculate statistics
     print("Validation stats for step #%d epoch #%d:" % (curr_step, epoch)) 
