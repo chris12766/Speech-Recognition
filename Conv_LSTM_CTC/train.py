@@ -181,7 +181,7 @@ def validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
 
 
 
-train_and_eval()    
+train_and_val()    
 
 
 
