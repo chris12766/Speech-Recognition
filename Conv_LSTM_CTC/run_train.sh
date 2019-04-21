@@ -12,7 +12,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --time=48:00:00
 
-cd /lyceum/rt1g16/Speech-Recognition/Conv_LSTM_CTC
+cd /lyceum/chk1g16/Speech-Recognition/Conv_LSTM_CTC
 module load conda/py3-latest
 source activate py3venv
 
