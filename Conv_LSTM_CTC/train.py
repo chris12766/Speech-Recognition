@@ -18,18 +18,21 @@ init_lr = 0.0002
 lr_decay_steps = 3800
 lr_decay_rate = 0.3
 
+
 saves_dir = os.path.join(main_dir, "speech_project_saves_%d" % model_input_type)
 if not os.path.isdir(saves_dir):
     os.mkdir(saves_dir)
-log_dir = os.path.join(saves_dir, "logs")
+log_dir = os.path.join(saves_dir, "logs_%d" % model_input_type)
 if not os.path.isdir(log_dir):
     os.mkdir(log_dir)
-ckpt_dir = os.path.join(saves_dir, "ckpts")
+ckpt_dir = os.path.join(saves_dir, "ckpts_%d" % model_input_type)
 if not os.path.isdir(ckpt_dir):
     os.mkdir(ckpt_dir)
+checkpoint_prefix = os.path.join(ckpt_dir, "Speech_%d.ckpt" % model_input_type)
     
     
-def train_and_eval():    
+best_val_accuracy = 0.0
+def train_and_val():    
     # Data input pipeline
     data_gen = DataGenerator(batch_size, data_dir, model_input_type)
     datasets = data_gen._get_datasets()
@@ -57,7 +60,7 @@ def train_and_eval():
                                                     data_gen._num_frames, data_gen._num_spec_bins, init_lr, lr_decay_steps, lr_decay_rate)
 
     # create savers
-    saver = tf.train.Saver(tf.global_variables(), max_to_keep=100000)
+    saver = tf.train.Saver(tf.global_variables(), max_to_keep=100)
     train_writer = tf.summary.FileWriter(os.path.join(log_dir, "train"), sess.graph)
     valid_writer = tf.summary.FileWriter(os.path.join(log_dir, "val"), sess.graph)
 
@@ -79,11 +82,9 @@ def train_and_eval():
         placeholders = data_gen._get_dataset_placeholders()
         train_data_batch_plh, train_label_batch_plh = placeholders[0]
         val_data_batch_plh, val_label_batch_plh = placeholders[1]
-            
+        
         sess.run(train_iter_init_op, feed_dict={train_data_batch_plh: data_lists[0],
                                                 train_label_batch_plh: labels_lists[0]})
-        sess.run(val_iter_init_op, feed_dict={val_data_batch_plh: data_lists[1],
-                                              val_label_batch_plh: labels_lists[1]})
         while True:
             try:
                 # (128, )    (128, 4)
@@ -105,11 +106,13 @@ def train_and_eval():
                 
                 if curr_step % 100 == 0 or curr_step == 1 or epoch == num_epochs:
                     # Run validation every 100 steps
-                    evaluate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_val, len(labels_lists[1]), data_gen)
-                    if curr_step != 1:
+                    accuracy = validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_val,
+                                        len(labels_lists[1]), data_gen, val_iter_init_op, val_data_batch_plh, 
+                                        val_label_batch_plh, data_lists, labels_lists)
+                    if curr_step != 1 and best_val_accuracy < accuracy:
+                        best_val_accuracy = accuracy
                         print("Saving in", ckpt_dir)
-                        saver.save(sess, ckpt_dir, global_step=curr_step)
-                
+                        saver.save(sess, checkpoint_prefix, global_step=curr_step)
                 
                 curr_step += 1
             except tf.errors.OutOfRangeError:
@@ -119,12 +122,18 @@ def train_and_eval():
     sess.close()
 
 
-def evaluate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_val, val_dataset_size, data_gen):
+def validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_val, 
+             val_dataset_size, data_gen, val_iter_init_op, val_data_batch_plh, 
+             val_label_batch_plh, data_lists, labels_lists):
     sum_acc_beam = 0
     loss_sum = 0
     score_sum = 0
     num_correct_preds = 0
     sum_edit_dist = 0
+    
+    
+    sess.run(val_iter_init_op, feed_dict={val_data_batch_plh: data_lists[1],
+                                          val_label_batch_plh: labels_lists[1]})
     
     print("Validating...")
     while True:
@@ -156,15 +165,19 @@ def evaluate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
             break
     
     
+    # record accuracy of the model trained so far
+    accuracy = (num_correct_preds / val_dataset_size)
+    valid_writer.add_summary(tf.summary.scalar('accuracy', accuracy), curr_step)
+    
     # calculate statistics
-    print("Validation stats for epoch #%d:" % epoch) 
-    print("accuracy = %.5f" % (num_correct_preds / val_dataset_size))
+    print("Validation stats for step #%d epoch #%d:" % (curr_step, epoch)) 
+    print("accuracy = %.5f" % accuracy)
     print("avg_acc_beam = %.5f" % (sum_acc_beam / val_dataset_size))
     print("avg_loss = %.4f" % (loss_sum / val_dataset_size))
     print("avg_edit_dist = %.4f" % (sum_edit_dist / val_dataset_size))
     print("confidence = %.3f" %(score_sum / val_dataset_size))
 
-
+    return accuracy
 
 
 

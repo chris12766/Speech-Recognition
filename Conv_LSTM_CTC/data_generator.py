@@ -18,6 +18,11 @@ class DataGenerator(object):
         self._test_data_dir = os.path.join(data_dir, "test")
         self._unknown_data_ratio = 1/6
         
+        
+        print()
+        print("INPUT TYPE:",input_type)
+        print()
+        
         self._bad_paths = []
         bad_file_records = ["bad_samples.txt", "silences.txt", "bad_samples_2.txt"]
         for f in bad_file_records:
