@@ -13,7 +13,7 @@ model_input_type = 0
 
 
 # Training params
-num_epochs = 50
+num_epochs = 100
 init_lr = 0.0002
 lr_decay_steps = 3800
 lr_decay_rate = 0.3
@@ -64,6 +64,7 @@ def train_and_val():
 
     # Load previous model version
     curr_step = 1
+    best_val_accuracy = 0.0
     model_checkpoint = tf.train.latest_checkpoint(ckpt_dir)
     if model_checkpoint:
         print("Restoring from", model_checkpoint)
