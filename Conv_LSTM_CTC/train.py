@@ -9,7 +9,7 @@ import multiprocessing
 
 
 
-model_input_type = 1
+model_input_type = 0
 
 
 # Training params
@@ -19,7 +19,7 @@ lr_decay_steps = 10000
 lr_decay_rate = 0.8
 
 
-saves_dir = os.path.join(main_dir, "speech_project_saves_%d_lrdec_10000" % model_input_type)
+saves_dir = os.path.join(main_dir, "speech_project_saves_%d" % model_input_type)
 if not os.path.isdir(saves_dir):
     os.mkdir(saves_dir)
 log_dir = os.path.join(saves_dir, "logs_%d" % model_input_type)
@@ -65,6 +65,7 @@ def train_and_val():
     # Load previous model version
     curr_step = 1
     best_val_accuracy = 0.0
+    acc_summary = tf.Summary()
     model_checkpoint = tf.train.latest_checkpoint(ckpt_dir)
     if model_checkpoint:
         print("Restoring from", model_checkpoint)
@@ -109,7 +110,7 @@ def train_and_val():
                     # Run validation every 100 steps
                     accuracy = validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_val,
                                         len(labels_lists[1]), data_gen, val_iter_init_op, val_data_batch_plh, 
-                                        val_label_batch_plh, data_lists, labels_lists)
+                                        val_label_batch_plh, data_lists, labels_lists, acc_summary)
                     if best_val_accuracy < accuracy:
                         best_val_accuracy = accuracy
                         checkpoint_prefix = os.path.join(ckpt_dir, "speech_input_%d_acc_%.5f" % (model_input_type, best_val_accuracy))
@@ -126,7 +127,7 @@ def train_and_val():
 
 def validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_val, 
              val_dataset_size, data_gen, val_iter_init_op, val_data_batch_plh, 
-             val_label_batch_plh, data_lists, labels_lists):
+             val_label_batch_plh, data_lists, labels_lists, acc_summary):
     sum_acc_beam = 0
     loss_sum = 0
     score_sum = 0
@@ -169,7 +170,8 @@ def validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
     
     # record accuracy of the model trained so far
     accuracy = (num_correct_preds / val_dataset_size)
-    valid_writer.add_summary(sess.run(tf.summary.scalar('accuracy', accuracy)), curr_step)
+    acc_summary.value.add(tag="accuracy", simple_value=accuracy)
+    valid_writer.add_summary(acc_summary, curr_step)
     
     # calculate statistics
     print("Validation stats for step #%d epoch #%d:" % (curr_step, epoch)) 
