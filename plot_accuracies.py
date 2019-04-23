@@ -2,14 +2,22 @@ import matplotlib.pyplot as plt
 import os
 
 data_dir = "C:\\Users\\chkar\\Desktop\\speech_project_saves\\accuracies"
-colours = ["b-", "g-", "r-", "y-", "m-", "k-", "c-"]
+colours = ["b-", "g-", "r-", "y-", "m-", "k-", "c-", "brown"]
+acc_files = ["acc_0", 
+             "acc_1", 
+             "acc_2", 
+             "acc_3", 
+             "acc_4", 
+             "acc_5", 
+             "acc_0_lrdec_10000", 
+             "acc_1_lrdec_10000"
+            ]
 
 
-
-for i in range(4):
+for i in range(len(acc_files)):
     accuracies = []
     training_steps = []
-    with open(os.path.join(data_dir, "acc_%d" %i )) as fp:  
+    with open(os.path.join(data_dir, acc_files[i])) as fp:  
         line = fp.readline()
         while line:
             if "index" in line:

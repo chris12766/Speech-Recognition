@@ -16,7 +16,7 @@ model_input_type = 0
 num_epochs = 100
 init_lr = 0.0002
 lr_decay_steps = 10000
-lr_decay_rate = 0.1
+lr_decay_rate = 0.8
 
 
 saves_dir = os.path.join(main_dir, "speech_project_saves_%d_lrdec_10000" % model_input_type)
