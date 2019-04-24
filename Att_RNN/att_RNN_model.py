@@ -107,7 +107,7 @@ def create_train_graph(num_classes, num_frames, num_mel_spec_bins, init_lr, lr_d
     # batch placeholders
     # batch size is None as it is not necessarily the same all the time
     data_batch_plh = tf.placeholder(tf.float32, [None, num_frames, num_mel_spec_bins], name="data")
-    label_batch_plh = tf.placeholder(tf.int32, [None, num_classes], name="labels")
+    label_batch_plh = tf.placeholder(tf.int32, [None], name="labels")
     
     # training placeholders
     dropout_keep_prob = tf.placeholder_with_default(1.0, shape=(), name="dropout_keep_prob")
