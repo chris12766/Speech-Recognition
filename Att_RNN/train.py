@@ -94,8 +94,7 @@ def train_and_val():
                 feed_dict[x] = data_batch
                 feed_dict[y] = label_batch
                 
-                summary, global_step, loss, acc_greedy, edit_dist_greedy, \
-                        acc_beam, edit_dist_beam, scores, _, learn_rate, global_norm = sess.run(train_args[0],
+                summary, global_step, loss, _, learn_rate, global_norm = sess.run(train_args[0],
                                                                                                 feed_dict=feed_dict)
                 train_writer.add_summary(summary, curr_step) 
                 
