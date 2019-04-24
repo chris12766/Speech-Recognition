@@ -13,9 +13,9 @@ model_input_type = 0
 
 # Training params
 num_epochs = 100
-init_lr = 0.0002
-lr_decay_steps = 10000
-lr_decay_rate = 0.8
+init_lr = 0.001
+lr_decay_steps = 25000
+lr_decay_rate = 0.4
 
 
 saves_dir = os.path.join(main_dir, "att_speech_project_saves_%d" % model_input_type)
