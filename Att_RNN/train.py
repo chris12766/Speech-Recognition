@@ -9,7 +9,7 @@ import multiprocessing
 
 
 
-model_input_type = 4
+model_input_type = 1
 
 # Training params
 num_epochs = 100
