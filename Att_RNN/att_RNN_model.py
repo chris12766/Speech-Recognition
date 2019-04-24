@@ -18,9 +18,35 @@ dropout_keep_prob_train = 0.5
 def att_RNN_net(input, dropout_keep_prob, batch_norm_train_mode, num_classes):
     batch_norm = lambda x: tf.layers.batch_normalization(x, training=batch_norm_train_mode)
 
-    net = tf.nn.conv2d(inputs=input, filters=10, kernel_size = [5,1] , padding='same', activation=tf.nn.relu)
+    net = tf.contrib.layers.conv2d(inputs=net,
+                                    num_outputs=10,
+                                    kernel_size=[5,1],
+                                    stride=1,
+                                    padding='SAME',
+                                    data_format=None,
+                                    rate=1,
+                                    activation_fn=tf.nn.relu,
+                                    normalizer_fn=None,
+                                    normalizer_params=None,
+                                    weights_initializer=initializers.xavier_initializer(),
+                                    weights_regularizer=None,
+                                    biases_initializer=tf.zeros_initializer(),
+                                    biases_regularizer=None)
     net = batch_norm(net)
-    net = tf.nn.conv2d(inputs=net, filters=1, kernel_size = [5,1] , padding='same', activation=tf.nn.relu)
+    net = tf.contrib.layers.conv2d(inputs=net,
+                                num_outputs=1,
+                                kernel_size=[5,1],
+                                stride=1,
+                                padding='SAME',
+                                data_format=None,
+                                rate=1,
+                                activation_fn=tf.nn.relu,
+                                normalizer_fn=None,
+                                normalizer_params=None,
+                                weights_initializer=initializers.xavier_initializer(),
+                                weights_regularizer=None,
+                                biases_initializer=tf.zeros_initializer(),
+                                biases_regularizer=None)
     net = batch_norm(net)
 
     # reshape to (125, 80)
