@@ -18,7 +18,7 @@ dropout_keep_prob_train = 0.5
 def att_RNN_net(input, dropout_keep_prob, batch_norm_train_mode, num_classes):
     batch_norm = lambda x: tf.layers.batch_normalization(x, training=batch_norm_train_mode)
 
-    net = tf.contrib.layers.conv2d(inputs=net,
+    net = tf.contrib.layers.conv2d(inputs=input,
                                     num_outputs=10,
                                     kernel_size=[5,1],
                                     stride=1,
