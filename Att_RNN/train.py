@@ -99,7 +99,7 @@ def train_and_val():
                 train_writer.add_summary(summary, curr_step) 
                 
                 print('curr_step #%d, epoch #%d' %(curr_step, epoch))
-                print("Training stats: acc_greedy = %.2f, loss = %.4f" %(acc_greedy * 100, loss))
+                print("Training stats: loss = %.4f" %loss)
                 print("Learning rate:", learn_rate)
                 print("Global norm:", global_norm)
                 
