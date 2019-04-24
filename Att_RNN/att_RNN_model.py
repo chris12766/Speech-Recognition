@@ -99,8 +99,7 @@ def att_RNN_net(input, dropout_keep_prob, batch_norm_train_mode, num_classes):
                                             normalizer_fn=None,
                                             normalizer_params=None,
                                             weights_initializer=tf.contrib.layers.xavier_initializer(),
-                                            weights_regularizer=None,
-                                            name="logits")
+                                            weights_regularizer=None)
     return logits 
     
 
