@@ -143,7 +143,7 @@ def get_sparse_crossentropy_loss(logits, label_batch):
         # calculate the loss                                
         # labels [batch_size]
         # logits [batch_size, num_classes]
-        crossentropy_loss_op = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=sparse_label_batch,
+        crossentropy_loss_op = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=label_batch,
                                                                               logits=logits)
         loss = tf.reduce_mean(crossentropy_loss_op)
 
