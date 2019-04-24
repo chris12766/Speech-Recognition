@@ -13,10 +13,9 @@ data_dir = os.path.join(main_dir, "speech_datasets")
 # params
 batch_size = 32
 dropout_keep_prob_train = 0.5
-num_classes = 30            #??????????????????????????????????????????????????????????????????????????
 
     
-def att_RNN_net(input, dropout_keep_prob, batch_norm_train_mode):
+def att_RNN_net(input, dropout_keep_prob, batch_norm_train_mode, num_classes):
     batch_norm = lambda x: tf.layers.batch_normalization(x, training=batch_norm_train_mode)
 
     net = tf.nn.conv2d(inputs=input, filters=10, kernel_size = [5,1] , padding='same', activation=tf.nn.relu)
@@ -56,38 +55,41 @@ def att_RNN_net(input, dropout_keep_prob, batch_norm_train_mode):
                                             weights_initializer=tf.contrib.layers.xavier_initializer(),
                                             weights_regularizer=None)
     net = tf.contrib.layers.fully_connected(net,
-                                            num_outputs=128,
+                                            num_outputs=32,
                                             activation_fn=None,
                                             normalizer_fn=None,
                                             normalizer_params=None,
                                             weights_initializer=tf.contrib.layers.xavier_initializer(),
                                             weights_regularizer=None)
 
-    predictions = tf.contrib.layers.fully_connected(net,
+    logits = tf.contrib.layers.fully_connected(net,
                                             num_outputs=num_classes,
-                                            activation_fn=tf.nn.softmax,
+                                            # activation_fn=tf.nn.softmax,  according to tensorflow the loss function does it
                                             normalizer_fn=None,
                                             normalizer_params=None,
                                             weights_initializer=tf.contrib.layers.xavier_initializer(),
-                                            weights_regularizer=None)
-    return predictions 
+                                            weights_regularizer=None,
+                                            name="logits")
+    return logits 
     
 
-def create_train_graph(label_encoding_length, num_frames, num_mel_spec_bins, init_lr, lr_decay_steps, lr_decay_rate):
+def create_train_graph(num_classes, num_frames, num_mel_spec_bins, init_lr, lr_decay_steps, lr_decay_rate):
     # batch placeholders
     # batch size is None as it is not necessarily the same all the time
     data_batch_plh = tf.placeholder(tf.float32, [None, num_frames, num_mel_spec_bins], name="data")
-    label_batch_plh = tf.placeholder(tf.int32, [None, label_encoding_length], name="label")
+    label_batch_plh = tf.placeholder(tf.int32, [None, num_classes], name="labels")
     
     # training placeholders
     dropout_keep_prob = tf.placeholder_with_default(1.0, shape=(), name="dropout_keep_prob")
     batch_norm_train_mode = tf.placeholder(tf.bool, name='batch_norm_train_mode')
 
     # inference
-    predictions = att_RNN_net(data_batch_plh, dropout_keep_prob, batch_norm_train_mode)
+    logits = att_RNN_net(data_batch_plh, dropout_keep_prob, batch_norm_train_mode, num_classes)
+    probabilities = tf.nn.softmax(logits)
+    pred_values, pred_indices = tf.nn.top_k(probabilities, k=1)
     
     # loss and performance metrics
-    loss = get_sparse_crossentropy_loss(predictions, label_batch_plh)
+    loss = get_sparse_crossentropy_loss(logits, label_batch_plh)
 
     # optimizer
     train_op, global_step, learn_rate, global_norm = optimize_loss(loss, init_lr, lr_decay_steps, lr_decay_rate)
@@ -102,15 +104,17 @@ def create_train_graph(label_encoding_length, num_frames, num_mel_spec_bins, ini
                        batch_norm_train_mode: True}
     val_feed_dict = {batch_norm_train_mode: False}
     
-    return (ops_to_run + [train_op, learn_rate, global_norm], train_feed_dict), (ops_to_run + [predictions], val_feed_dict), data_batch_plh, label_batch_plh
+    return (ops_to_run + [train_op, learn_rate, global_norm], train_feed_dict), (ops_to_run + [pred_values, pred_indices], val_feed_dict), data_batch_plh, label_batch_plh
 
 
 
-def get_sparse_crossentropy_loss(predictions, label_batch):
+def get_sparse_crossentropy_loss(logits, label_batch):
     with tf.name_scope('loss'):
         # calculate the loss                                
+        # labels [batch_size]
+        # logits [batch_size, num_classes]
         crossentropy_loss_op = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=sparse_label_batch,
-                                                                              logits=predictions)
+                                                                              logits=logits)
         loss = tf.reduce_mean(crossentropy_loss_op)
 
     tf.summary.scalar('crossentropy_loss', loss)

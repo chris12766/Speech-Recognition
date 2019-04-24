@@ -9,8 +9,7 @@ import multiprocessing
 
 
 
-model_input_type = 5
-
+model_input_type = 0
 
 # Training params
 num_epochs = 100
@@ -19,13 +18,13 @@ lr_decay_steps = 10000
 lr_decay_rate = 0.8
 
 
-saves_dir = os.path.join(main_dir, "speech_project_saves_%d" % model_input_type)
+saves_dir = os.path.join(main_dir, "att_speech_project_saves_%d" % model_input_type)
 if not os.path.isdir(saves_dir):
     os.mkdir(saves_dir)
-log_dir = os.path.join(saves_dir, "logs_%d" % model_input_type)
+log_dir = os.path.join(saves_dir, "att_logs_%d" % model_input_type)
 if not os.path.isdir(log_dir):
     os.mkdir(log_dir)
-ckpt_dir = os.path.join(saves_dir, "ckpts_%d" % model_input_type)
+ckpt_dir = os.path.join(saves_dir, "att_ckpts_%d" % model_input_type)
 if not os.path.isdir(ckpt_dir):
     os.mkdir(ckpt_dir)
     
@@ -54,7 +53,7 @@ def train_and_val():
     
 
     # Create train graph
-    train_args, val_args, x, y = create_train_graph(data_gen._label_encoding_length,
+    train_args, val_args, x, y = create_train_graph(data_gen._num_classes,
                                                     data_gen._num_frames, data_gen._num_spec_bins, init_lr, lr_decay_steps, lr_decay_rate)
 
     # create savers
@@ -89,7 +88,6 @@ def train_and_val():
                                                 train_label_batch_plh: labels_lists[0]})
         while True:
             try:
-                # (128, )    (128, 4)
                 data_batch, label_batch = sess.run(next_batch_train)
                 
                 feed_dict = train_args[1]
@@ -128,12 +126,9 @@ def train_and_val():
 def validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_val, 
              val_dataset_size, data_gen, val_iter_init_op, val_data_batch_plh, 
              val_label_batch_plh, data_lists, labels_lists, acc_summary):
-    sum_acc_beam = 0
     loss_sum = 0
-    score_sum = 0
+    confidence_sum = 0
     num_correct_preds = 0
-    sum_edit_dist = 0
-    
     
     sess.run(val_iter_init_op, feed_dict={val_data_batch_plh: data_lists[1],
                                           val_label_batch_plh: labels_lists[1]})
@@ -147,22 +142,16 @@ def validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
             feed_dict[x] = data_batch
             feed_dict[y] = label_batch
             
-            summary, global_step, loss, acc_greedy, edit_dist_greedy, \
-                        acc_beam, edit_dist_beam, scores, predictions = sess.run(val_args[0],
-                                                                                 feed_dict=val_args[1])
+            summary, global_step, loss, pred_values, pred_indices = sess.run(val_args[0],
+                                                                             feed_dict=val_args[1])
             valid_writer.add_summary(summary, curr_step)
 
             
-            sum_acc_beam += acc_beam
             loss_sum += loss
-            score_sum += scores.sum()
-            sum_edit_dist += edit_dist_beam.sum()
+            confidence_sum += pred_values.sum()
 
             for i in range(label_batch.shape[0]):
-                word_label = data_gen._get_label_from_encoding(label_batch[i])
-                predicted_word = data_gen._get_label_from_encoding(predictions[i])
-                
-                if word_label == predicted_word:
+                if label_batch[i] == pred_values[i]:
                     num_correct_preds += 1
         except tf.errors.OutOfRangeError:
             break
@@ -176,10 +165,8 @@ def validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
     # calculate statistics
     print("Validation stats for step #%d epoch #%d:" % (curr_step, epoch)) 
     print("accuracy = %.5f" % accuracy)
-    print("avg_acc_beam = %.5f" % (sum_acc_beam / val_dataset_size))
     print("avg_loss = %.4f" % (loss_sum / val_dataset_size))
-    print("avg_edit_dist = %.4f" % (sum_edit_dist / val_dataset_size))
-    print("confidence = %.3f" %(score_sum / val_dataset_size))
+    print("confidence = %.3f" %(confidence_sum / val_dataset_size))
 
     return accuracy
 
