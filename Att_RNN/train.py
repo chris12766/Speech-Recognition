@@ -103,6 +103,7 @@ def train_and_val():
                     print(p)
                     
                 print()
+                sys.exit()
                 
                 print('curr_step #%d, epoch #%d' %(curr_step, epoch))
                 print("Training stats: loss = %.4f" %loss)
