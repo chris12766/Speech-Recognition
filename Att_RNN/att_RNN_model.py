@@ -19,7 +19,7 @@ def att_RNN_net(input, dropout_keep_prob, batch_norm_train_mode, num_classes):
     batch_norm = lambda x: tf.layers.batch_normalization(x, training=batch_norm_train_mode)
     
     # normalize
-    input = batch_norm(input)
+    #input = batch_norm(input)
     # expand dims for convolution to work
     input = tf.expand_dims(input, -1)
     
