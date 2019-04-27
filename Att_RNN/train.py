@@ -94,9 +94,15 @@ def train_and_val():
                 feed_dict[x] = data_batch
                 feed_dict[y] = label_batch
                 
-                summary, global_step, loss, _, learn_rate, global_norm = sess.run(train_args[0],
-                                                                                                feed_dict=feed_dict)
+                summary, global_step, loss, _, learn_rate, global_norm, pred_values, pred_indices = sess.run(train_args[0],
+                                                                                                             feed_dict=feed_dict)
                 train_writer.add_summary(summary, curr_step) 
+                
+                print("PREDICTIONS")
+                for p in pred_values:
+                    print(p)
+                    
+                print()
                 
                 print('curr_step #%d, epoch #%d' %(curr_step, epoch))
                 print("Training stats: loss = %.4f" %loss)

@@ -134,7 +134,7 @@ def create_train_graph(num_classes, num_frames, num_mel_spec_bins, init_lr, lr_d
                        batch_norm_train_mode: True}
     val_feed_dict = {batch_norm_train_mode: False}
     
-    return (ops_to_run + [train_op, learn_rate, global_norm], train_feed_dict), (ops_to_run + [pred_values, pred_indices], val_feed_dict), data_batch_plh, label_batch_plh
+    return (ops_to_run + [train_op, learn_rate, global_norm, pred_values, pred_indices], train_feed_dict), (ops_to_run + [pred_values, pred_indices], val_feed_dict), data_batch_plh, label_batch_plh
 
 
 
@@ -143,7 +143,6 @@ def get_sparse_crossentropy_loss(logits, label_batch):
         # calculate the loss                                
         # labels [batch_size]
         # logits [batch_size, num_classes]
-        print("AA", label_batch.shape)
         crossentropy_loss_op = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=label_batch,
                                                                               logits=logits)
         loss = tf.reduce_mean(crossentropy_loss_op)
