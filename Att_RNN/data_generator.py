@@ -93,13 +93,6 @@ class DataGenerator(object):
             dataset = dataset.batch(batch_size, drop_remainder=False)
             
             
-            mel_spec_kapre = lambda x : Melspectrogram(n_dft=1024, n_hop=128, input_shape=(1, self._audio_length),
-                                                         padding='same', sr=self._sampling_rate, n_mels=80,
-                                                         fmin=40.0, fmax=self._sampling_rate/2, power_melgram=1.0,
-                                                         return_decibel_melgram=True, trainable_fb=False,
-                                                         trainable_kernel=False,
-                                                         name='mel_stft')(x)
-            
             if input_type == 1: # mag spectrogram
                 dataset = dataset.map(lambda x,y : (self._convert_to_mag_specs(x), y), num_parallel_calls=20)
             elif input_type == 2: # log mag spectrogram
@@ -110,9 +103,6 @@ class DataGenerator(object):
                 dataset = dataset.map(lambda x,y : (self._convert_to_log_mel_specs(x), y), num_parallel_calls=20)
             elif input_type == 5: # mfcc
                 dataset = dataset.map(lambda x,y : (self._convert_to_mfcc(x), y), num_parallel_calls=20)
-            elif input_type == 6:
-                dataset = dataset.map(lambda x,y : (mel_spec_kapre(x), y), num_parallel_calls=20)
-                
                 
             self._datasets.append(dataset)
         
