@@ -101,6 +101,7 @@ def train_and_val():
                 print("PREDICTIONS")
                 for i in range(label_batch.shape[0]):
                     print(label_batch[i], pred_indices[i])
+                    print(label_batch[i] == pred_indices[i])
                     
                    
                 
