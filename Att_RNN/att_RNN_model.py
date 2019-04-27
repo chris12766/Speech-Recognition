@@ -23,6 +23,19 @@ def att_RNN_net(input, dropout_keep_prob, batch_norm_train_mode, num_classes):
     # expand dims for convolution to work
     input = tf.expand_dims(input, -1)
     
+    print(input.shape)
+    
+    
+    input = tf.keras.layers.Permute((2,1,3))(input)
+    
+    
+    print(input.shape)
+    
+    
+    sys.exit()
+    
+    
+    
     net = tf.contrib.layers.conv2d(inputs=input,
                                     num_outputs=10,
                                     kernel_size=[5,1],
