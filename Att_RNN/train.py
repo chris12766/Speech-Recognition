@@ -99,10 +99,15 @@ def train_and_val():
                 train_writer.add_summary(summary, curr_step) 
                 
                 print("PREDICTIONS")
-                for p in pred_values:
+                for p in pred_indices:
                     print(p)
                     
+                    
                 print()
+                for l in label_batch:
+                    print(l)
+                
+                
                 sys.exit()
                 
                 print('curr_step #%d, epoch #%d' %(curr_step, epoch))
