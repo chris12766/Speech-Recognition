@@ -23,9 +23,6 @@ class DataGenerator(object):
         print("INPUT TYPE:",input_type)
         print()
         
-        
-        sys.exit()
-        
         self._bad_paths = []
         bad_file_records = ["bad_samples.txt", "silences.txt", "bad_samples_2.txt"]
         for f in bad_file_records:
