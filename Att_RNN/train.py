@@ -98,15 +98,6 @@ def train_and_val():
                                                                                                              feed_dict=feed_dict)
                 train_writer.add_summary(summary, curr_step) 
                 
-                print("PREDICTIONS")
-                for i in range(label_batch.shape[0]):
-                    print(label_batch[i], pred_indices[i])
-                    print(label_batch[i] == pred_indices[i])
-                    
-                   
-                
-                sys.exit()
-                
                 print('curr_step #%d, epoch #%d' %(curr_step, epoch))
                 print("Training stats: loss = %.4f" %loss)
                 print("Learning rate:", learn_rate)
