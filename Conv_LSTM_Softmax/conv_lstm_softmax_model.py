@@ -133,7 +133,6 @@ def conv_lstm_net(input, dropout_keep_prob, batch_norm_train_mode, num_classes):
                                                 num_units=128,
                                                 dropout=0.0,
                                                 seed=None,
-                                                dtype=tf.dtypes.float32,
                                                 kernel_initializer=None,
                                                 bias_initializer=None)(lstm_input)
                                                 
