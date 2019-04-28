@@ -128,31 +128,42 @@ def conv_lstm_net(input, dropout_keep_prob, batch_norm_train_mode, num_classes):
         lstm_input = tf.transpose(lstm_input, [1, 0, 2])
         
         # create GRU cell and layer
+        # output: (98, ?, 128)
         gru_output, state = tf.contrib.cudnn_rnn.CudnnGRU(num_layers=1,
-                                                num_units=256,
+                                                num_units=128,
                                                 dropout=0.0,
                                                 seed=None,
                                                 dtype=tf.dtypes.float32,
                                                 kernel_initializer=None,
                                                 bias_initializer=None)(lstm_input)
-        
-        
-        
-        print()
-        print(gru_output.shape)
-        print()
-        
-        sys.exit()
-        
+                                                
+                                                
         with tf.name_scope('fc_net_part'):
+            fc_net = tf.transpose(gru_output, [1, 0, 2])
+            fc_net = tf.reshape(fc_net, [-1, fc_net.shape[1] * fc_net.shape[2]])
+
+            # FC Block 1
+            # BN and dropout
+            fc_net = tf.layers.batch_normalization(fc_net, training=batch_norm_train_mode)
             if dropout_keep_prob != 1:
-                gru_output = tf.nn.dropout(gru_output, keep_prob=dropout_keep_prob)
+                fc_net = tf.nn.dropout(fc_net, keep_prob=dropout_keep_prob)
             
-            logits = tf.contrib.layers.fully_connected(gru_output,
+            fc_net = tf.contrib.layers.fully_connected(fc_net,
+                                            num_outputs=128,
+                                            activation_fn=tf.nn.relu,
+                                            normalizer_fn=lambda x : tf.layers.batch_normalization(x, training=batch_norm_train_mode),
+                                            weights_initializer=tf.contrib.layers.xavier_initializer(),
+                                            weights_regularizer=None)
+            
+            # FC Block 2
+            if dropout_keep_prob != 1:
+                fc_net = tf.nn.dropout(fc_net, keep_prob=dropout_keep_prob)
+            
+            # classification
+            logits = tf.contrib.layers.fully_connected(fc_net,
                                             num_outputs=num_classes,
                                             # activation_fn=tf.nn.softmax,  according to tensorflow the loss function does it
-                                            normalizer_fn=None,
-                                            normalizer_params=None,
+                                            normalizer_fn=lambda x : tf.layers.batch_normalization(x, training=batch_norm_train_mode),
                                             weights_initializer=tf.contrib.layers.xavier_initializer(),
                                             weights_regularizer=None)
         
