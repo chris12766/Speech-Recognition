@@ -39,7 +39,7 @@ def conv_net_part(input, batch_norm_train_mode):
         # Block 1
         net = conv2d_relu(input=input, conv_kernel_shape=[7, 7, 1, 16], 
                           conv_padding='VALID', relu=True)
-        net = tf.layers.batch_normalization(net, training=training)
+        net = tf.layers.batch_normalization(net, training=batch_norm_train_mode)
         
         print(1)
         print(net.shape)
@@ -48,7 +48,7 @@ def conv_net_part(input, batch_norm_train_mode):
         # Block 2
         net = conv2d_relu(input=net, conv_kernel_shape=[5, 5, 16, 32], 
                           conv_padding='VALID', relu=True)
-        net = tf.layers.batch_normalization(net, training=training)
+        net = tf.layers.batch_normalization(net, training=batch_norm_train_mode)
         
         print(21)
         print(net.shape)
@@ -62,7 +62,7 @@ def conv_net_part(input, batch_norm_train_mode):
         # Block 3
         net = conv2d_relu(input=net, conv_kernel_shape=[3, 3, 32, 32], 
                           conv_padding='VALID', relu=True)
-        net = tf.layers.batch_normalization(net, training=training)
+        net = tf.layers.batch_normalization(net, training=batch_norm_train_mode)
         
         
         print(3)
@@ -71,7 +71,7 @@ def conv_net_part(input, batch_norm_train_mode):
         # Block 4
         net = conv2d_relu(input=net, conv_kernel_shape=[3, 3, 32, 32], 
                           conv_padding='VALID', relu=True)
-        net = tf.layers.batch_normalization(net, training=training)
+        net = tf.layers.batch_normalization(net, training=batch_norm_train_mode)
         
         print(4)
         print(net.shape)
