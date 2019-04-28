@@ -15,7 +15,7 @@ batch_size = 32
 dropout_keep_prob_train = 0.5
 
 
-def conv2d_relu_pool_batch_norm(input, conv_kernel_shape, training, conv_padding='SAME', relu=True, pool_kernel, pool_strides, pool_padding='SAME'):
+def conv2d_relu_pool_batch_norm(input, conv_kernel_shape, training, conv_padding='SAME', relu=True, pool_kernel=[1, 3, 3, 1], pool_strides=[1, 2, 1, 1], pool_padding='SAME'):
     # create conv filter from random normal distr with mean 0 and std dev 0.01
     filter = tf.Variable(tf.truncated_normal(shape=conv_kernel_shape,
                                              stddev=0.01),
@@ -41,23 +41,19 @@ def conv_net_part(input, batch_norm_train_mode):
         # each conv kernel shape is [filter_height, filter_width, in_channels, out_channels]
         # Block 1
         net = conv2d_relu_pool_batch_norm(input=input, conv_kernel_shape=[7, 7, 1, 16], 
-                                          training=batch_norm_train_mode, conv_padding='VALID', relu=True,
-                                          pool_kernel=[1, 3, 3, 1], pool_strides[1, 2, 1, 1])
+                                          training=batch_norm_train_mode, conv_padding='VALID', relu=True)
         
         # Block 2
         net = conv2d_relu_pool_batch_norm(input=input, conv_kernel_shape=[5, 5, 16, 32], 
-                                          training=batch_norm_train_mode, conv_padding='VALID', relu=True,
-                                          pool_kernel=[1, 3, 3, 1], pool_strides[1, 2, 1, 1])
+                                          training=batch_norm_train_mode, conv_padding='VALID', relu=True)
                                           
         # Block 3
         net = conv2d_relu_pool_batch_norm(input=input, conv_kernel_shape=[3, 3, 32, 32], 
-                                          training=batch_norm_train_mode, conv_padding='VALID', relu=True,
-                                          pool_kernel=[1, 3, 3, 1], pool_strides[1, 2, 1, 1])
+                                          training=batch_norm_train_mode, conv_padding='VALID', relu=True)
                                           
         # Block 4
         net = conv2d_relu_pool_batch_norm(input=input, conv_kernel_shape=[3, 3, 32, 32], 
-                                          training=batch_norm_train_mode, conv_padding='VALID', relu=True,
-                                          pool_kernel=[1, 3, 3, 1], pool_strides[1, 2, 1, 1])
+                                          training=batch_norm_train_mode, conv_padding='VALID', relu=True)
     
     
         print()
