@@ -64,6 +64,10 @@ def conv_net_part(input, batch_norm_train_mode):
         net = conv2d_relu_batch_norm(input=net, conv_kernel_shape=[3, 3, 32, 32], 
                                           training=batch_norm_train_mode, conv_padding='VALID', relu=True)
         
+        print(4)
+        print(net.shape)
+        print()
+        
         net = tf.nn.max_pool(value=net, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
         
         
