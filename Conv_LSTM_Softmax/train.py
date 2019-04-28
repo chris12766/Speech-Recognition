@@ -18,13 +18,13 @@ lr_decay_steps = 25000
 lr_decay_rate = 0.4
 
 
-saves_dir = os.path.join(main_dir, "att_speech_project_saves_%d" % model_input_type)
+saves_dir = os.path.join(main_dir, "softmax_speech_project_saves_%d" % model_input_type)
 if not os.path.isdir(saves_dir):
     os.mkdir(saves_dir)
-log_dir = os.path.join(saves_dir, "att_logs_%d" % model_input_type)
+log_dir = os.path.join(saves_dir, "softmax_logs_%d" % model_input_type)
 if not os.path.isdir(log_dir):
     os.mkdir(log_dir)
-ckpt_dir = os.path.join(saves_dir, "att_ckpts_%d" % model_input_type)
+ckpt_dir = os.path.join(saves_dir, "softmax_ckpts_%d" % model_input_type)
 if not os.path.isdir(ckpt_dir):
     os.mkdir(ckpt_dir)
     
