@@ -49,7 +49,7 @@ def conv_net_part(input, batch_norm_train_mode):
         print()
         
         # Block 2
-        net = conv2d_relu_pool_batch_norm(input=input, conv_kernel_shape=[3, 3, 64, 64], 
+        net = conv2d_relu_pool_batch_norm(input=net, conv_kernel_shape=[3, 3, 64, 64], 
                                           training=batch_norm_train_mode, conv_padding='VALID', relu=True)
             
         print(2)
@@ -57,7 +57,7 @@ def conv_net_part(input, batch_norm_train_mode):
         print()
         
         # Block 3
-        net = conv2d_relu_pool_batch_norm(input=input, conv_kernel_shape=[3, 3, 64, 128], 
+        net = conv2d_relu_pool_batch_norm(input=net, conv_kernel_shape=[3, 3, 64, 128], 
                                           training=batch_norm_train_mode, conv_padding='VALID', relu=True)
         
         print(3)
@@ -65,7 +65,7 @@ def conv_net_part(input, batch_norm_train_mode):
         print()
         
         # Block 4
-        net = conv2d_relu_pool_batch_norm(input=input, conv_kernel_shape=[3, 3, 128, 256], 
+        net = conv2d_relu_pool_batch_norm(input=net, conv_kernel_shape=[3, 3, 128, 256], 
                                           training=batch_norm_train_mode, conv_padding='VALID', relu=True)
     
     
