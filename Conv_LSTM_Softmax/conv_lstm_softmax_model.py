@@ -77,7 +77,7 @@ def conv_net_part(input, batch_norm_train_mode):
         print(net.shape)
         print()
         
-        net = tf.nn.max_pool(value=net, ksize=[1, 2, 4, 1], strides=[1, 1, 4 , 1], padding='SAME')
+        net = tf.nn.max_pool(value=net, ksize=[1, 2, 5, 1], strides=[1, 1, 4 , 1], padding='SAME')
         
         print(net.shape)
         '''
@@ -88,15 +88,15 @@ def conv_net_part(input, batch_norm_train_mode):
         (?, 102, 231, 32)
 
         2
-        (?, 102, 116, 32)
+        (?, 102, 58, 32)
 
         3
-        (?, 100, 114, 32)
+        (?, 100, 56, 32)
 
         4
-        (?, 98, 112, 32)
+        (?, 98, 54, 32)
 
-        (?, 49, 56, 32)
+        (?, 98, 14, 32)
         '''
         sys.exit()
     return net
@@ -105,7 +105,7 @@ def conv_net_part(input, batch_norm_train_mode):
 def conv_lstm_net(input, dropout_keep_prob, batch_norm_train_mode, num_char_classes):
     # conv part
     # input: (batch_size=?, 112, 46)
-    # ouput: (batch_size=?, 24, 114, 32)
+    # ouput: (batch_size=?, 98, 14, 32)
     conv_net_output = conv_net_part(input, batch_norm_train_mode)
 
     # rnn part
