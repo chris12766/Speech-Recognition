@@ -25,7 +25,7 @@ def conv2d_relu_pool_batch_norm(input, conv_kernel_shape, training, conv_padding
     if relu:
         net = tf.nn.relu(net)
         
-    net = tf.nn.max_pool(value=net, ksize=pool_kernel, strides=pool_strides, padding=pool_padding)
+    #net = tf.nn.max_pool(value=net, ksize=pool_kernel, strides=pool_strides, padding=pool_padding)
     net = tf.layers.batch_normalization(net, training=training)
         
     return net
