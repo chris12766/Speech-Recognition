@@ -1,7 +1,7 @@
 import os
 import glob
 import tensorflow as tf
-from att_RNN_model import *
+from conv_lstm_softmax_model import *
 from data_generator import DataGenerator
 import sys
 import scipy.io.wavfile
