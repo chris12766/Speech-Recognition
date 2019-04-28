@@ -53,7 +53,7 @@ def conv_net_part(input, batch_norm_train_mode):
         print(net.shape)
         print()
           
-        net = tf.nn.max_pool(value=net, ksize=[1, 3, 3, 1], strides=[1, 2, 1, 1], padding='SAME')
+        net = tf.nn.max_pool(value=net, ksize=[1, 3, 3, 1], strides=[1, 1, 2, 1], padding='SAME')
         print(2)
         print(net.shape)
         print()
@@ -74,19 +74,34 @@ def conv_net_part(input, batch_norm_train_mode):
         
         net = tf.nn.max_pool(value=net, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME')
         
-        
-        
         print(net.shape)
-        
+        '''
+        1
+        (?, 106, 235, 16)
+
+        21
+        (?, 102, 231, 32)
+
+        2
+        (?, 51, 231, 32)
+
+        3
+        (?, 49, 229, 32)
+
+        4
+        (?, 47, 227, 32)
+
+        (?, 24, 114, 32)
+
+        '''
         sys.exit()
-        
     return net
 
     
 def conv_lstm_net(input, dropout_keep_prob, batch_norm_train_mode, num_char_classes):
     # conv part
     # input: (batch_size=?, 112, 46)
-    # ouput: (batch_size=?, 12, 4, 256)
+    # ouput: (batch_size=?, 24, 114, 32)
     conv_net_output = conv_net_part(input, batch_norm_train_mode)
 
     # rnn part
@@ -100,81 +115,9 @@ def conv_lstm_net(input, dropout_keep_prob, batch_norm_train_mode, num_char_clas
         # reverse the data sequences
         lstm_input = reverse_data_seqs(lstm_input)
         
-        # create LSTM cell
-        backward_lstm_cell = tf.nn.rnn_cell.LSTMCell(num_units=768,
-                                        use_peepholes=True,
-                                        cell_clip=None,
-                                        initializer=None,
-                                        num_proj=None,
-                                        proj_clip=None,
-                                        num_unit_shards=None,
-                                        num_proj_shards=None,
-                                        forget_bias=1.0,
-                                        state_is_tuple=True,
-                                        activation=None,
-                                        reuse=None)
-        # add the same dropout mask to the input and state at every step
-        backward_lstm_cell_with_dropout = tf.nn.rnn_cell.DropoutWrapper(backward_lstm_cell, 
-                                                    input_keep_prob=dropout_keep_prob, 
-                                                    state_keep_prob=dropout_keep_prob, 
-                                                    output_keep_prob=1.0,
-                                                    variational_recurrent=True,  
-                                                    input_size=num_features_per_seq_fragment,
-                                                    dtype=tf.float32)
         
-        # backwards LSTM layer
-        backward_lstm_output, state = tf.nn.dynamic_rnn(backward_lstm_cell_with_dropout, 
-                                                        lstm_input,
-                                                        sequence_length=None,
-                                                        time_major=False, 
-                                                        scope='rnn', 
-                                                        swap_memory=True,
-                                                        parallel_iterations=8,
-                                                        dtype=tf.float32)
-        # reverse data sequences back to normal
-        lstm_output = reverse_data_seqs(backward_lstm_output)
-        # normalize
-        # (batch_size=?/128, data_seq_len=12, features=768)
-        lstm_net_output = tf.layers.batch_normalization(lstm_output, training=batch_norm_train_mode)
-
-
-    # final fully-connected part
-    with tf.name_scope('fc_net_part'):
-        leaky_relu = lambda x: tf.nn.leaky_relu(x, alpha=0.75)
-        batch_norm = lambda x: tf.layers.batch_normalization(x, training=batch_norm_train_mode)
         
-
-        # FC Block 1
-        if dropout_keep_prob != 1:
-            fc_net = tf.nn.dropout(lstm_net_output, keep_prob=dropout_keep_prob)
         
-        # use batch_norm instead of biases                                                                  
-        # also use leaky_relu
-        fc_net = tf.contrib.layers.fully_connected(fc_net,
-                            num_outputs=160,
-                            activation_fn=leaky_relu,
-                            normalizer_fn=batch_norm,
-                            normalizer_params=None,
-                            weights_initializer=tf.contrib.layers.xavier_initializer(),
-                            weights_regularizer=None)
-        # (batch_size=?, data_seq_len=12, features=160)
-        fc_net = tf.nn.leaky_relu(fc_net, alpha=0.75)
-
-
-        # FC Block 2
-        if dropout_keep_prob != 1:
-            fc_net = tf.nn.dropout(fc_net, keep_prob=dropout_keep_prob)
-           
-        # use batch_norm instead of biases
-        # (batch_size=?, max_time/data_seq_len=12, num_char_classes=28)
-        logits = tf.contrib.layers.fully_connected(fc_net,
-                                num_outputs=num_char_classes,
-                                activation_fn=None,
-                                normalizer_fn=batch_norm,
-                                normalizer_params=None,
-                                weights_initializer=tf.contrib.layers.xavier_initializer(),
-                                weights_regularizer=None)
-                                
     return logits
     
 
