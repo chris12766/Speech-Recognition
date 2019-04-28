@@ -49,7 +49,11 @@ def conv_net_part(input, batch_norm_train_mode):
         # Block 2
         net = conv2d_relu_batch_norm(input=net, conv_kernel_shape=[5, 5, 16, 32], 
                                           training=batch_norm_train_mode, conv_padding='VALID', relu=True)
-        
+        print(21)
+        print(net.shape)
+        print()
+          
+        net = tf.nn.max_pool(value=net, ksize=[1, 3, 3, 1], strides=[1, 2, 1, 1], padding='SAME')
         print(2)
         print(net.shape)
         print()
@@ -68,7 +72,7 @@ def conv_net_part(input, batch_norm_train_mode):
         print(net.shape)
         print()
         
-        net = tf.nn.max_pool(value=net, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+        net = tf.nn.max_pool(value=net, ksize=[1, 3, 3, 1], strides=[1, 2, 1, 1], padding='SAME')
         
         
         
