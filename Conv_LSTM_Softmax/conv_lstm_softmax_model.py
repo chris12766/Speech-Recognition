@@ -41,23 +41,35 @@ def conv_net_part(input, batch_norm_train_mode):
     
         # each conv kernel shape is [filter_height, filter_width, in_channels, out_channels]
         # Block 1
-        net = conv2d_relu_pool_batch_norm(input=input, conv_kernel_shape=[3, 3, 1, 32], 
+        net = conv2d_relu_pool_batch_norm(input=input, conv_kernel_shape=[5, 3, 1, 64], 
                                           training=batch_norm_train_mode, conv_padding='VALID', relu=True)
         
+        print(1)
+        print(net.shape)
+        print()
+        
         # Block 2
-        net = conv2d_relu_pool_batch_norm(input=input, conv_kernel_shape=[3, 3, 32, 64], 
+        net = conv2d_relu_pool_batch_norm(input=input, conv_kernel_shape=[3, 3, 64, 64], 
                                           training=batch_norm_train_mode, conv_padding='VALID', relu=True)
-                                          
+            
+        print(2)
+        print(net.shape)
+        print()
+        
         # Block 3
         net = conv2d_relu_pool_batch_norm(input=input, conv_kernel_shape=[3, 3, 64, 128], 
                                           training=batch_norm_train_mode, conv_padding='VALID', relu=True)
-                                          
+        
+        print(3)
+        print(net.shape)
+        print()
+        
         # Block 4
         net = conv2d_relu_pool_batch_norm(input=input, conv_kernel_shape=[3, 3, 128, 256], 
                                           training=batch_norm_train_mode, conv_padding='VALID', relu=True)
     
     
-        print()
+        print(4)
         print(net.shape)
         print()
         
