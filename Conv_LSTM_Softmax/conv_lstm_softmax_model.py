@@ -139,6 +139,8 @@ def conv_lstm_net(input, dropout_keep_prob, batch_norm_train_mode, num_classes):
                                                 
                                                 
         with tf.name_scope('fc_net_part'):
+            batch_norm = lambda x : tf.layers.batch_normalization(x, training=batch_norm_train_mode)
+        
             fc_net = tf.transpose(gru_output, [1, 0, 2])
             fc_net = tf.reshape(fc_net, [-1, fc_net.shape[1] * fc_net.shape[2]])
 
@@ -151,7 +153,7 @@ def conv_lstm_net(input, dropout_keep_prob, batch_norm_train_mode, num_classes):
             fc_net = tf.contrib.layers.fully_connected(fc_net,
                                             num_outputs=128,
                                             activation_fn=tf.nn.relu,
-                                            normalizer_fn=lambda x : tf.layers.batch_normalization(x, training=batch_norm_train_mode),
+                                            normalizer_fn=batch_norm,
                                             weights_initializer=tf.contrib.layers.xavier_initializer(),
                                             weights_regularizer=None)
             
@@ -163,7 +165,7 @@ def conv_lstm_net(input, dropout_keep_prob, batch_norm_train_mode, num_classes):
             logits = tf.contrib.layers.fully_connected(fc_net,
                                             num_outputs=num_classes,
                                             # activation_fn=tf.nn.softmax,  according to tensorflow the loss function does it
-                                            normalizer_fn=lambda x : tf.layers.batch_normalization(x, training=batch_norm_train_mode),
+                                            normalizer_fn=batch_norm,
                                             weights_initializer=tf.contrib.layers.xavier_initializer(),
                                             weights_regularizer=None)
         
