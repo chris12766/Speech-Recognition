@@ -63,7 +63,7 @@ def conv_net_part(input, batch_norm_train_mode):
         net = conv2d_relu(input=net, conv_kernel_shape=[3, 3, 32, 32], 
                           conv_padding='VALID', relu=True)
         net = tf.layers.batch_normalization(net, training=batch_norm_train_mode)
-        
+         
         print(3)
         print(net.shape)
         print()
@@ -95,42 +95,86 @@ def conv_net_part(input, batch_norm_train_mode):
         (?, 102, 231, 32)
 
         21
-        (?, 102, 58, 32)
+        (?, 102, 116, 32)
 
         3
-        (?, 100, 56, 32)
+        (?, 100, 114, 32)
 
         31
-        (?, 100, 14, 32)
+        (?, 100, 29, 32)
 
         4
-        (?, 98, 12, 32)
+        (?, 98, 27, 32)
 
-        (?, 98, 6, 32)
+        (?, 98, 7, 32)
         '''
-        sys.exit()
     return net
 
     
-def conv_lstm_net(input, dropout_keep_prob, batch_norm_train_mode, num_char_classes):
+def conv_lstm_net(input, dropout_keep_prob, batch_norm_train_mode, num_classes):
     # conv part
     # input: (batch_size=?, 112, 46)
-    # ouput: (batch_size=?, 98, 6, 32)
+    # ouput: (batch_size=?, 98, 7, 32)
     conv_net_output = conv_net_part(input, batch_norm_train_mode)
 
     # rnn part
     with tf.name_scope('lstm_net_part'):
-        reverse_data_seqs = lambda x: tf.reverse(x, axis=[1])
         # convert to shape: (batch_size=?, data_seq_len, num_feats_per_seq_fragment)
         data_seq_len = conv_net_output.shape[1]
         num_features_per_seq_fragment = conv_net_output.shape[2] * conv_net_output.shape[3]
         lstm_input = tf.reshape(conv_net_output, [-1, data_seq_len, num_features_per_seq_fragment])
         
-        # reverse the data sequences
-        lstm_input = reverse_data_seqs(lstm_input)
+        
+        # create LSTM cell
+        gru_cell = tf.contrib.cudnn_rnn.CudnnGRU(num_layers=1,
+                                                num_units=256,
+                                                input_mode=CUDNN_INPUT_LINEAR_MODE,
+                                                direction=CUDNN_RNN_UNIDIRECTION,
+                                                dropout=0.0,
+                                                seed=None,
+                                                dtype=tf.dtypes.float32,
+                                                kernel_initializer=None,
+                                                bias_initializer=None)
+        # add the same dropout mask to the input and state at every step
+        gru_cell_with_dropout = tf.nn.rnn_cell.DropoutWrapper(gru_cell, 
+                                                    input_keep_prob=dropout_keep_prob, 
+                                                    state_keep_prob=dropout_keep_prob, 
+                                                    output_keep_prob=1.0,
+                                                    variational_recurrent=True,  
+                                                    input_size=num_features_per_seq_fragment,
+                                                    dtype=tf.float32)
+        
+        # GRU layer
+        gru_output, state = tf.nn.dynamic_rnn(gru_cell_with_dropout, 
+                                                        lstm_input,
+                                                        sequence_length=None,
+                                                        time_major=False, 
+                                                        scope='rnn', 
+                                                        swap_memory=True,
+                                                        parallel_iterations=8,
+                                                        dtype=tf.float32)
         
         
         
+        
+        with tf.name_scope('fc_net_part'):
+            if dropout_keep_prob != 1:
+                gru_output = tf.nn.dropout(gru_output, keep_prob=dropout_keep_prob)
+            
+            logits = tf.contrib.layers.fully_connected(gru_output,
+                                            num_outputs=num_classes,
+                                            # activation_fn=tf.nn.softmax,  according to tensorflow the loss function does it
+                                            normalizer_fn=None,
+                                            normalizer_params=None,
+                                            weights_initializer=tf.contrib.layers.xavier_initializer(),
+                                            weights_regularizer=None)
+        
+        
+        
+        print()
+        print(logits.shape)
+        print()
+        sys.exit()
         
     return logits
     
