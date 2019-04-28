@@ -169,14 +169,7 @@ def conv_lstm_net(input, dropout_keep_prob, batch_norm_train_mode, num_classes):
                                             normalizer_fn=batch_norm,
                                             weights_initializer=tf.contrib.layers.xavier_initializer(),
                                             weights_regularizer=None)
-        
-        
-        
-        print()
-        print(logits.shape)
-        print()
-        sys.exit()
-        
+                                            
     return logits
     
 
