@@ -124,36 +124,25 @@ def conv_lstm_net(input, dropout_keep_prob, batch_norm_train_mode, num_classes):
         num_features_per_seq_fragment = conv_net_output.shape[2] * conv_net_output.shape[3]
         lstm_input = tf.reshape(conv_net_output, [-1, data_seq_len, num_features_per_seq_fragment])
         
+        # make it time-major
+        lstm_input = tf.transpose(orig_tensor, [1, 0, 2])
         
-        # create LSTM cell
-        gru_cell = tf.contrib.cudnn_rnn.CudnnGRU(num_layers=1,
+        # create GRU cell and layer
+        gru_output, state = tf.contrib.cudnn_rnn.CudnnGRU(num_layers=1,
                                                 num_units=256,
                                                 dropout=0.0,
                                                 seed=None,
                                                 dtype=tf.dtypes.float32,
                                                 kernel_initializer=None,
-                                                bias_initializer=None)
-        # add the same dropout mask to the input and state at every step
-        gru_cell_with_dropout = tf.nn.rnn_cell.DropoutWrapper(gru_cell, 
-                                                    input_keep_prob=dropout_keep_prob, 
-                                                    state_keep_prob=dropout_keep_prob, 
-                                                    output_keep_prob=1.0,
-                                                    variational_recurrent=True,  
-                                                    input_size=num_features_per_seq_fragment,
-                                                    dtype=tf.float32)
-        
-        # GRU layer
-        gru_output, state = tf.nn.dynamic_rnn(gru_cell_with_dropout, 
-                                                        lstm_input,
-                                                        sequence_length=None,
-                                                        time_major=False, 
-                                                        scope='rnn', 
-                                                        swap_memory=True,
-                                                        parallel_iterations=8,
-                                                        dtype=tf.float32)
+                                                bias_initializer=None)(lstm_input)
         
         
         
+        print()
+        print(gru_output.shape)
+        print()
+        
+        sys.exit()
         
         with tf.name_scope('fc_net_part'):
             if dropout_keep_prob != 1:
