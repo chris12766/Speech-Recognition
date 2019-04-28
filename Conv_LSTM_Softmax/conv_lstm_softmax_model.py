@@ -143,7 +143,8 @@ def conv_lstm_net(input, dropout_keep_prob, batch_norm_train_mode, num_classes):
         
             fc_net = tf.transpose(gru_output, [1, 0, 2])
             fc_net = tf.reshape(fc_net, [-1, fc_net.shape[1] * fc_net.shape[2]])
-
+            
+            '''
             # FC Block 1
             # BN and dropout
             fc_net = tf.layers.batch_normalization(fc_net, training=batch_norm_train_mode)
@@ -156,7 +157,7 @@ def conv_lstm_net(input, dropout_keep_prob, batch_norm_train_mode, num_classes):
                                             normalizer_fn=batch_norm,
                                             weights_initializer=tf.contrib.layers.xavier_initializer(),
                                             weights_regularizer=None)
-            
+            '''
             # FC Block 2
             if dropout_keep_prob != 1:
                 fc_net = tf.nn.dropout(fc_net, keep_prob=dropout_keep_prob)
