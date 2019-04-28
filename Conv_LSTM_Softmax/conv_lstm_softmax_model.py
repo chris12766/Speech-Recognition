@@ -20,7 +20,7 @@ def conv2d_relu_pool_batch_norm(input, conv_kernel_shape, training, conv_padding
     filter = tf.Variable(tf.truncated_normal(shape=conv_kernel_shape,
                                              stddev=0.01),
                                              name='conv2d_kernel')
-    net = tf.nn.conv2d(input, filter, strides=[1, 1, 1, 1], padding=padding)
+    net = tf.nn.conv2d(input, filter, strides=[1, 1, 1, 1], padding=conv_padding)
     if relu:
         net = tf.nn.relu(net)
         
