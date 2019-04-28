@@ -125,7 +125,7 @@ def conv_lstm_net(input, dropout_keep_prob, batch_norm_train_mode, num_classes):
         lstm_input = tf.reshape(conv_net_output, [-1, data_seq_len, num_features_per_seq_fragment])
         
         # make it time-major
-        lstm_input = tf.transpose(orig_tensor, [1, 0, 2])
+        lstm_input = tf.transpose(lstm_input, [1, 0, 2])
         
         # create GRU cell and layer
         gru_output, state = tf.contrib.cudnn_rnn.CudnnGRU(num_layers=1,
