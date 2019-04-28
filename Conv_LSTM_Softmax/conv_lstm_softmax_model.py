@@ -46,20 +46,37 @@ def conv_net_part(input, batch_norm_train_mode):
         net = conv2d_relu_batch_norm(input=net, conv_kernel_shape=[3, 3, 64, 128], 
                                           training=batch_norm_train_mode, conv_padding='VALID', relu=True)
         
+        print(2)
+        print(net.shape)
+        print()
+        
         # Block 3
         net = conv2d_relu_batch_norm(input=net, conv_kernel_shape=[3, 3, 128, 256], 
                                           training=batch_norm_train_mode, conv_padding='VALID', relu=True)
-        
+        print(3)
+        print(net.shape)
+        print()
         # Block 4
         net = conv2d_relu_batch_norm(input=net, conv_kernel_shape=[7, 7, 256, 256], 
                                           training=batch_norm_train_mode, conv_padding='VALID', relu=True)
-                                          
+        print(4)
+        print(net.shape)
+        print()                                          
         # Block 5
         net = conv2d_relu_batch_norm(input=net, conv_kernel_shape=[12, 12, 256, 256], 
                                           training=batch_norm_train_mode, conv_padding='VALID', relu=True)
-        
+        print(5)
+        print(net.shape)
+        print()        
         # Block 6
         net = conv2d_relu_batch_norm(input=net, conv_kernel_shape=[12, 12, 256, 256], 
+                                          training=batch_norm_train_mode, conv_padding='VALID', relu=True)
+        print(6)
+        print(net.shape)
+        print()
+        
+        # Block 6
+        net = conv2d_relu_batch_norm(input=net, conv_kernel_shape=[15, 15, 256, 256], 
                                           training=batch_norm_train_mode, conv_padding='VALID', relu=True)
         
         net = tf.nn.max_pool(value=net, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
