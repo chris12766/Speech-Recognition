@@ -72,7 +72,7 @@ def conv_net_part(input, batch_norm_train_mode):
         print(net.shape)
         print()
         
-        net = tf.nn.max_pool(value=net, ksize=[1, 3, 3, 1], strides=[1, 2, 1, 1], padding='SAME')
+        net = tf.nn.max_pool(value=net, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME')
         
         
         
