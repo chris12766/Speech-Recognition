@@ -128,8 +128,6 @@ def conv_lstm_net(input, dropout_keep_prob, batch_norm_train_mode, num_classes):
         # create LSTM cell
         gru_cell = tf.contrib.cudnn_rnn.CudnnGRU(num_layers=1,
                                                 num_units=256,
-                                                input_mode=CUDNN_INPUT_LINEAR_MODE,
-                                                direction=CUDNN_RNN_UNIDIRECTION,
                                                 dropout=0.0,
                                                 seed=None,
                                                 dtype=tf.dtypes.float32,
