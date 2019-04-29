@@ -13,9 +13,9 @@ model_input_type = 4
 
 # Training params
 num_epochs = 100
-init_lr = 0.001
+init_lr = 0.003
 lr_decay_steps = 25000
-lr_decay_rate = 0.4
+lr_decay_rate = 0.3
 
 
 saves_dir = os.path.join(main_dir, "softmax_speech_project_saves_%d" % model_input_type)

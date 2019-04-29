@@ -235,12 +235,21 @@ def optimize_loss(loss, init_lr, lr_decay_steps, lr_decay_rate):
                                                 decay_rate=lr_decay_rate, 
                                                 staircase=True,
                                                 name='adapt_learn_rate')
+        '''
         optimizer = tf.train.AdamOptimizer(learning_rate=learn_rate,
                                            beta1=0.9,
                                            beta2=0.999,
                                            epsilon=1e-8,
                                            use_locking=False,
                                            name='Adam')
+        '''
+        optimizer = tf.train.MomentumOptimizer(learning_rate=learn_rate,
+                                                momentum=0.9,
+                                                use_locking=False,
+                                                name='Momentum',
+                                                use_nesterov=False)
+        
+        
         # compute gradients
         gradients = tf.gradients(loss, train_vars)
         # gradient clipping
