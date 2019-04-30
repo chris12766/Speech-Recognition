@@ -15,6 +15,7 @@ init_lr = 0.003
 lr_decay_steps = 25000
 lr_decay_rate = 0.3
 '''
+
 num_epochs = 100
 init_lr = 0.0002
 lr_decay_steps = 10000
