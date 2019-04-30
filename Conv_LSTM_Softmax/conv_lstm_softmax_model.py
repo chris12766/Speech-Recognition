@@ -41,52 +41,25 @@ def conv_net_part(input, batch_norm_train_mode):
                           conv_padding='VALID', relu=True)
         net = tf.layers.batch_normalization(net, training=batch_norm_train_mode)
         
-        print(1)
-        print(net.shape)
-        print()
-        
         # Block 2
         net = conv2d_relu(input=net, conv_kernel_shape=[5, 5, 16, 32], 
                           conv_padding='VALID', relu=True)
         net = tf.layers.batch_normalization(net, training=batch_norm_train_mode)
-        
-        print(2)
-        print(net.shape)
-        print()
-          
         net = tf.nn.max_pool(value=net, ksize=[1, 2, 2, 1], strides=[1, 1, 2, 1], padding='SAME')
-        print(21)
-        print(net.shape)
-        print()
         
         # Block 3
         net = conv2d_relu(input=net, conv_kernel_shape=[3, 3, 32, 32], 
                           conv_padding='VALID', relu=True)
         net = tf.layers.batch_normalization(net, training=batch_norm_train_mode)
-         
-        print(3)
-        print(net.shape)
-        print()
-        
-        
         net = tf.nn.max_pool(value=net, ksize=[1, 2, 4, 1], strides=[1, 1, 4, 1], padding='SAME')
-        
-        print(31)
-        print(net.shape)
-        print()
         
         # Block 4
         net = conv2d_relu(input=net, conv_kernel_shape=[3, 3, 32, 32], 
                           conv_padding='VALID', relu=True)
         net = tf.layers.batch_normalization(net, training=batch_norm_train_mode)
-        
-        print(4)
-        print(net.shape)
-        print()
-        
         net = tf.nn.max_pool(value=net, ksize=[1, 2, 4, 1], strides=[1, 1, 4, 1], padding='SAME')
         
-        print(net.shape)
+        
         '''
         1
         (?, 106, 235, 16)
@@ -235,7 +208,7 @@ def optimize_loss(loss, init_lr, lr_decay_steps, lr_decay_rate):
                                                 decay_rate=lr_decay_rate, 
                                                 staircase=True,
                                                 name='adapt_learn_rate')
-        '''
+        
         optimizer = tf.train.AdamOptimizer(learning_rate=learn_rate,
                                            beta1=0.9,
                                            beta2=0.999,
@@ -249,7 +222,7 @@ def optimize_loss(loss, init_lr, lr_decay_steps, lr_decay_rate):
                                                 name='Momentum',
                                                 use_nesterov=False)
         
-        
+        '''
         # compute gradients
         gradients = tf.gradients(loss, train_vars)
         # gradient clipping

@@ -6,7 +6,7 @@ from data_generator import DataGenerator
 import sys
 
 
-model_input_type = 4
+model_input_type = 1
 
 # Training params
 num_epochs = 100
@@ -105,9 +105,6 @@ def train_and_val():
                     accuracy = validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_val,
                                         len(labels_lists[1]), data_gen, val_iter_init_op, val_data_batch_plh, 
                                         val_label_batch_plh, data_lists, labels_lists, acc_summary)
-                    
-                    print("end")
-                    sys.exit(0)
                     
                     
                     if best_val_accuracy < accuracy:
