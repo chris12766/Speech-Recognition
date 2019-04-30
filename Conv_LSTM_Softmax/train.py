@@ -6,7 +6,7 @@ from data_generator import DataGenerator
 import sys
 
 
-model_input_type = 5
+model_input_type = 2
 
 # Training params
 num_epochs = 100
