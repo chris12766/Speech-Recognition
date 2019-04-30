@@ -7,7 +7,6 @@ from tensorflow.python.platform import gfile
 import scipy.io.wavfile
 import concurrent.futures
 import re
-from kapre.time_frequency import Melspectrogram, Spectrogram
 
 
 class DataGenerator(object):
