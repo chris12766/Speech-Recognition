@@ -148,14 +148,14 @@ def validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
             valid_writer.add_summary(summary, curr_step)
 
             for t, p in zip(label_batch, pred_indices):
-                print(t, p, t == p)
+                print(t, p, t == p[0])
             
             
             loss_sum += loss
             confidence_sum += pred_values.sum()
 
             for i in range(label_batch.shape[0]):
-                if label_batch[i] == pred_values[i]:
+                if label_batch[i] == pred_values[i][0]:
                     num_correct_preds += 1
         except tf.errors.OutOfRangeError:
             break
