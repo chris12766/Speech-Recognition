@@ -105,6 +105,11 @@ def train_and_val():
                     accuracy = validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_val,
                                         len(labels_lists[1]), data_gen, val_iter_init_op, val_data_batch_plh, 
                                         val_label_batch_plh, data_lists, labels_lists, acc_summary)
+                    
+                    
+                    sys.exit()
+                    
+                    
                     if best_val_accuracy < accuracy:
                         best_val_accuracy = accuracy
                         checkpoint_prefix = os.path.join(ckpt_dir, "speech_input_%d_acc_%.5f" % (model_input_type, best_val_accuracy))

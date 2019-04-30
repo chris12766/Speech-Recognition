@@ -10,7 +10,7 @@
 
 #SBATCH -p lyceum
 #SBATCH --gres=gpu:1
-#SBATCH --time=1:00:00
+#SBATCH --time=48:00:00
 
 cd /lyceum/chk1g16/Speech-Recognition/Conv_LSTM_Softmax
 module load conda/py3-latest

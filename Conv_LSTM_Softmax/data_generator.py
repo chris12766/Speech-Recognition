@@ -162,7 +162,7 @@ class DataGenerator(object):
                 known_data.append([wav_path, self._known_words.index(curr_word)])
                 known_data_word_occur[curr_word] += 1
             else:
-                unknown_data.append([wav_path, 11])
+                unknown_data.append([wav_path, self._known_words.index(self._unknown_label)])
      
 
 
