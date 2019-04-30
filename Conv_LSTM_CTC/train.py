@@ -3,10 +3,6 @@ import glob
 import tensorflow as tf
 from conv_lstm_ctc_net import *
 from data_generator import DataGenerator
-import sys
-import scipy.io.wavfile
-import multiprocessing
-
 
 
 model_input_type = 5
