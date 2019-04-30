@@ -155,7 +155,7 @@ def validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
             confidence_sum += pred_values.sum()
 
             for i in range(label_batch.shape[0]):
-                if label_batch[i] == pred_values[i][0]:
+                if label_batch[i] == pred_indices[i][0]:
                     num_correct_preds += 1
         except tf.errors.OutOfRangeError:
             break
