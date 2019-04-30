@@ -142,6 +142,9 @@ def validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
                                                                              feed_dict=val_args[1])
             valid_writer.add_summary(summary, curr_step)
 
+            for t, p in zip(label_batch, pred_indices):
+                print(t, p, t == p)
+            
             
             loss_sum += loss
             confidence_sum += pred_values.sum()
