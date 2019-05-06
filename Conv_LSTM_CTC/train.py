@@ -131,8 +131,8 @@ def validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
     sum_edit_dist = 0
     
     
-    sess.run(val_iter_init_op, feed_dict={val_data_batch_plh: data_lists[1],
-                                          val_label_batch_plh: labels_lists[1]})
+    sess.run(val_iter_init_op, feed_dict={val_data_batch_plh: data_lists[0],
+                                          val_label_batch_plh: labels_lists[0]})
     
     print("Validating...")
     while True:
@@ -145,7 +145,7 @@ def validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
             
             summary, global_step, loss, acc_greedy, edit_dist_greedy, \
                         acc_beam, edit_dist_beam, scores, predictions = sess.run(val_args[0],
-                                                                                 feed_dict=val_args[1])
+                                                                                 feed_dict=feed_dict)
             valid_writer.add_summary(summary, curr_step)
 
             
