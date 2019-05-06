@@ -3,9 +3,9 @@ import glob
 import tensorflow as tf
 from conv_lstm_ctc_net import *
 from data_generator import DataGenerator
+import sys
 
-
-model_input_type = 5
+model_input_type = 2
 
 
 # Training params
@@ -170,7 +170,7 @@ def validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
     valid_writer.add_summary(acc_summary, curr_step)
     
     # calculate statistics
-    print("Validation stats for step #%d epoch #%d:" % (curr_step, epoch)) 
+    print("Evaluation stats for step #%d epoch #%d:" % (curr_step, epoch)) 
     print("accuracy = %.5f" % accuracy)
     print("avg_acc_beam = %.5f" % (sum_acc_beam / val_dataset_size))
     print("avg_loss = %.4f" % (loss_sum / val_dataset_size))
@@ -180,8 +180,59 @@ def validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
     return accuracy
 
 
+def test():
+    # Data input pipeline
+    data_gen = DataGenerator(batch_size, data_dir, model_input_type)
+    datasets = data_gen._get_datasets()
+    
+    test_dataset = datasets[0]
+    test_iterator = test_dataset.make_initializable_iterator()
+    test_iter_init_op = test_iterator.initializer
+    next_batch_test = test_iterator.get_next()
+  
 
-train_and_val()    
+    # Session start
+    config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth = True), 
+                            allow_soft_placement=True, 
+                            log_device_placement=False)                      
+    sess = tf.Session(config=config)
+    
+
+    # Create train graph
+    train_args, test_args, x, y = create_train_graph(data_gen._num_char_classes, data_gen._label_encoding_length,
+                                                    data_gen._num_frames, data_gen._num_spec_bins, init_lr, lr_decay_steps, lr_decay_rate)
+
+    # create savers
+    saver = tf.train.Saver(tf.global_variables(), max_to_keep=100)
+    train_writer = tf.summary.FileWriter(os.path.join(log_dir, "train"), sess.graph)
+    test_writer = tf.summary.FileWriter(os.path.join(log_dir, "test"), sess.graph)
+
+    # Load previous model version
+    curr_step = 1
+    best_test_accuracy = 0.0
+    acc_summary = tf.Summary()
+    model_checkpoint = tf.train.latest_checkpoint(ckpt_dir)
+    if model_checkpoint:
+        print("Restoring from", model_checkpoint)
+        saver.restore(sess=sess, save_path=model_checkpoint)
+        filename_parts = model_checkpoint.split("-")
+        curr_step += int(filename_parts[-1])
+        best_val_accuracy = float(filename_parts[0].split("_")[-1])
+        print("BEST ACCURACY: ", best_val_accuracy)
+    else:
+        sys.exit(0)
+
+    print("Start of testing...")
+    data_lists, labels_lists = data_gen._get_data_lists()
+    placeholders = data_gen._get_dataset_placeholders()
+    train_data_batch_plh, train_label_batch_plh = placeholders[0]
+    test_data_batch_plh, test_label_batch_plh = placeholders[1]
+
+    accuracy = validate(curr_step, epoch, x, y, sess, test_writer, test_args, next_batch_test,
+                        len(labels_lists[1]), data_gen, test_iter_init_op, test_data_batch_plh, 
+                        test_label_batch_plh, data_lists, labels_lists, acc_summary)
+                        
+    sess.close()
 
 
 

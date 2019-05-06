@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import os
 
-data_dir = "C:\\Users\\chkar\\Desktop\\speech_project_saves\\accuracies"
+data_dir = "C:\\Users\\chkar\\Desktop\\speech_project_saves\\training_session_1\\accuracies"
 colours = ["b-", "g-", "r-", "y-", "m-", "k-", "c-", "brown"]
 acc_files = ["acc_0", 
              "acc_1", 
@@ -9,8 +9,8 @@ acc_files = ["acc_0",
              "acc_3", 
              "acc_4", 
              "acc_5", 
-             "acc_0_lrdec_10000", 
-             "acc_1_lrdec_10000"
+             # "acc_0_lrdec_10000", 
+             # "acc_1_lrdec_10000"
             ]
 
 

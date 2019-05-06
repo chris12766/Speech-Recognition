@@ -342,40 +342,6 @@ def create_train_graph(num_char_classes, label_encoding_length, num_frames, num_
     return (ops_to_run + [train_op, learn_rate, global_norm], train_feed_dict), (ops_to_run + [predictions], val_feed_dict), data_batch_plh, label_batch_plh
 
 
-'''
-def create_inference_graph(FLAGS, num_char_classes, label_encoding_length):
-        audio_length = int(sampling_rate * audio_dur_in_ms / 1000)
-        frame_size = int(sampling_rate * frame_size_ms / 1000)
-        frame_stride = int(sampling_rate * frame_stride_ms / 1000)
-        num_mel_spec_bins = num_mel_spec_bins
-        tf.logging.info('audios_inference parameters: %s',
-                                        [audio_length, frame_size, frame_stride, num_mel_spec_bins])
-
-        audio = tf.placeholder(tf.float32, [None, audio_length],
-                                                                 name='audio')
-        spectrogram = convert_to_spectrogram(
-                audio, sampling_rate, frame_size, frame_stride, num_mel_spec_bins)
-
-        batch_norm_train_mode = tf.placeholder(tf.bool, name='batch_norm_train_mode')
-        logits, dbg_layers, dbg_embeddings = conv_lstm_net(
-                spectrogram, num_char_classes, dropout_keep_prob=1, batch_norm_train_mode=batch_norm_train_mode)
-        prob = tf.nn.softmax(logits)
-        chars = tf.argmax(prob, axis=2)
-
-        label_lengths = tf.fill([tf.shape(spectrogram)[0]], label_encoding_length)
-        logits_T = tf.transpose(logits, perm=[1, 0, 2])
-        pred, score_cmp = tf.nn.ctc_beam_search_decoder(
-                logits_T, label_lengths, top_paths=2)
-        pred_cmp = [tf.cast(tf.sparse.to_dense(p), tf.int32)
-                                            for p in pred]
-        predicts = pred_cmp[0]
-        scores = score_cmp[:, 0] - score_cmp[:, 1]
-'''       
-        
-
-
-
-
 
 
 
