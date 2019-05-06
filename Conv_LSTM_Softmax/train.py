@@ -134,8 +134,8 @@ def validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
     confidence_sum = 0
     num_correct_preds = 0
     
-    sess.run(val_iter_init_op, feed_dict={val_data_batch_plh: data_lists[1],
-                                          val_label_batch_plh: labels_lists[1]})
+    sess.run(val_iter_init_op, feed_dict={val_data_batch_plh: data_lists[0],
+                                          val_label_batch_plh: labels_lists[0]})
     
     print("Validating...")
     while True:
