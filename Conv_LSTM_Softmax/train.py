@@ -196,7 +196,7 @@ def test():
     
 
     # Create train graph
-    _, test_args, x, y = create_train_graph(data_gen._num_char_classes, data_gen._label_encoding_length,
+    _, test_args, x, y = create_train_graph(data_gen._num_classes,
                                                     data_gen._num_frames, data_gen._num_spec_bins, init_lr, lr_decay_steps, lr_decay_rate)
 
     # create savers
