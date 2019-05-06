@@ -204,7 +204,6 @@ def test():
 
     # create savers
     saver = tf.train.Saver(tf.global_variables(), max_to_keep=100)
-    train_writer = tf.summary.FileWriter(os.path.join(log_dir, "train"), sess.graph)
     test_writer = tf.summary.FileWriter(os.path.join(log_dir, "test"), sess.graph)
 
     # Load previous model version
