@@ -199,7 +199,7 @@ def test():
     
 
     # Create train graph
-    train_args, test_args, x, y = create_train_graph(data_gen._num_char_classes, data_gen._label_encoding_length,
+    _, test_args, x, y = create_train_graph(data_gen._num_char_classes, data_gen._label_encoding_length,
                                                     data_gen._num_frames, data_gen._num_spec_bins, init_lr, lr_decay_steps, lr_decay_rate)
 
     # create savers
@@ -209,6 +209,7 @@ def test():
     # Load previous model version
     curr_step = 1
     best_test_accuracy = 0.0
+    epoch = 1
     acc_summary = tf.Summary()
     model_checkpoint = tf.train.latest_checkpoint(ckpt_dir)
     if model_checkpoint:
