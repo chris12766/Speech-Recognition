@@ -6,7 +6,7 @@ from data_generator import DataGenerator
 import sys
 
 
-model_input_type = 1
+model_input_type = 4
 
 # Training params
 '''
@@ -147,7 +147,7 @@ def validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
             feed_dict[y] = label_batch
             
             summary, global_step, loss, pred_values, pred_indices = sess.run(val_args[0],
-                                                                             feed_dict=val_args[1])
+                                                                             feed_dict=feed_dict)
             valid_writer.add_summary(summary, curr_step)
 
             for t, p in zip(label_batch, pred_indices):
@@ -177,10 +177,62 @@ def validate(curr_step, epoch, x, y, sess, valid_writer, val_args, next_batch_va
 
     return accuracy
 
+def test():
+    # Data input pipeline
+    data_gen = DataGenerator(batch_size, data_dir, model_input_type)
+    datasets = data_gen._get_datasets()
+    
+    test_dataset = datasets[0]
+    test_iterator = test_dataset.make_initializable_iterator()
+    test_iter_init_op = test_iterator.initializer
+    next_batch_test = test_iterator.get_next()
+  
+
+    # Session start
+    config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth = True), 
+                            allow_soft_placement=True, 
+                            log_device_placement=False)                      
+    sess = tf.Session(config=config)
+    
+
+    # Create train graph
+    _, test_args, x, y = create_train_graph(data_gen._num_char_classes, data_gen._label_encoding_length,
+                                                    data_gen._num_frames, data_gen._num_spec_bins, init_lr, lr_decay_steps, lr_decay_rate)
+
+    # create savers
+    saver = tf.train.Saver(tf.global_variables(), max_to_keep=100)
+    test_writer = tf.summary.FileWriter(os.path.join(log_dir, "test"), sess.graph)
+
+    # Load previous model version
+    curr_step = 1
+    best_test_accuracy = 0.0
+    epoch = 1
+    acc_summary = tf.Summary()
+    model_checkpoint = tf.train.latest_checkpoint(ckpt_dir)
+    if model_checkpoint:
+        print("Restoring from", model_checkpoint)
+        saver.restore(sess=sess, save_path=model_checkpoint)
+        filename_parts = model_checkpoint.split("-")
+        curr_step += int(filename_parts[-1])
+        best_val_accuracy = float(filename_parts[0].split("_")[-1])
+        print("BEST ACCURACY: ", best_val_accuracy)
+    else:
+        print("Didn't load checkpoint:")
+        print(model_checkpoint)
+        sys.exit(0)
+
+    print("Start of testing...")
+    data_lists, labels_lists = data_gen._get_data_lists()
+    placeholders = data_gen._get_dataset_placeholders()
+    test_data_batch_plh, test_label_batch_plh = placeholders[0]
+
+    accuracy = validate(curr_step, epoch, x, y, sess, test_writer, test_args, next_batch_test,
+                        len(labels_lists[0]), data_gen, test_iter_init_op, test_data_batch_plh, 
+                        test_label_batch_plh, data_lists, labels_lists, acc_summary)
+                        
+    sess.close()
 
 
-train_and_val()    
-
-
+test()
 
 

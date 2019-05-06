@@ -69,7 +69,10 @@ class DataGenerator(object):
         
         
         # retrieve the data
-        self._load_data_in_lists([self._train_data_dir, self._val_data_dir])
+        self._load_data_in_lists([
+                                #self._train_data_dir, 
+                                #self._val_data_dir,
+                                self._test_data_dir])
         self._datasets = []
         self._placeholders = []
 
