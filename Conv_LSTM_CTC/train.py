@@ -226,8 +226,7 @@ def test():
     print("Start of testing...")
     data_lists, labels_lists = data_gen._get_data_lists()
     placeholders = data_gen._get_dataset_placeholders()
-    train_data_batch_plh, train_label_batch_plh = placeholders[0]
-    test_data_batch_plh, test_label_batch_plh = placeholders[1]
+    test_data_batch_plh, test_label_batch_plh = placeholders[0]
 
     accuracy = validate(curr_step, epoch, x, y, sess, test_writer, test_args, next_batch_test,
                         len(labels_lists[1]), data_gen, test_iter_init_op, test_data_batch_plh, 
