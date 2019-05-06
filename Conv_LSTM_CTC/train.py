@@ -219,7 +219,8 @@ def test():
         best_val_accuracy = float(filename_parts[0].split("_")[-1])
         print("BEST ACCURACY: ", best_val_accuracy)
     else:
-        print("Didn't load checkpoint.")
+        print("Didn't load checkpoint:")
+        print(model_checkpoint)
         sys.exit(0)
 
     print("Start of testing...")
