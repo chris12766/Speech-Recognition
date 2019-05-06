@@ -236,5 +236,5 @@ def test():
     sess.close()
 
 
-
+test()
 
